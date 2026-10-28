@@ -207,6 +207,9 @@ public sealed partial class MainWindow : Window, IPlayerSurface
             case "glass":
                 SetGlass(msg);
                 break;
+            case "upscale":
+                SetUpscaling((bool)msg["on"]!);
+                break;
             case "chrome":
                 SetChromeLayout(Rects(msg["regions"]), Rect(msg["maximize"]));
                 break;

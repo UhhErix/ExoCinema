@@ -1,5 +1,25 @@
 [
   {
+    "version": "1.0.4",
+    "items": [
+      {
+        "icon": "Glass",
+        "title": "AI upscaling on RTX cards",
+        "detail": "A video smaller than your screen is sharpened by NVIDIA's RTX Video Super Resolution as it plays, when it's on in Exo Launcher's PC > Display."
+      },
+      {
+        "icon": "Play",
+        "title": "Games come first",
+        "detail": "While Exo Launcher has a game running, the upscaler steps aside so the game keeps its graphics card."
+      },
+      {
+        "icon": "Home",
+        "title": "Updates that wait",
+        "detail": "An update waits a few seconds for Exo Cinema's last helpers to close, instead of stopping at \"folder in use\"."
+      }
+    ]
+  },
+  {
     "version": "1.0.3",
     "items": [
       {

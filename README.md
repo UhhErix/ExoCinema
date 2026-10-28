@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/UhhErix/ExoCinema/releases/latest/download/ExoCinema-Setup.exe"><strong>Download for Windows 11</strong></a>
-  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.3">What's new in 1.0.3</a>
+  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.4">What's new in 1.0.4</a>
   · <a href="CHANGELOG.md">Changelog</a>
   · <a href="PRIVACY.md">Privacy</a>
   · <a href="SECURITY.md">Security</a>
@@ -17,11 +17,11 @@
 
 | File | Version | SHA-256 |
 | --- | --- | --- |
-| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.0.3/ExoCinema-Setup.exe) | 1.0.3 | `d9a0ca17d038271ac3ad2ab5e4221326183ec1ea20217936a831430f6cfd69af` |
+| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.0.4/ExoCinema-Setup.exe) | 1.0.4 | `3fac9a23a8100636ceeb155ae8087efc56a863f73ba98097dbe58fa65f1783c1` |
 
 **Requirements:** Windows 11 x64 with WebView2 (built into Windows 11; Setup installs it if it's missing), and a Jellyfin server to sign in to. Installs for your Windows user only, in `%LOCALAPPDATA%\ExoCinema\app`, with no administrator rights.
 
-**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.3):
+**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.4):
 
 ```powershell
 Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
@@ -48,6 +48,7 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 ## The player
 
 - **Built on mpv.** libmpv decodes and draws into the window itself, under the interface, so the picture never passes through a web page: hardware decoding through Direct3D 11, mpv's high-quality scalers on a dedicated graphics card (Balanced on others), and HDR and Dolby Vision tone mapped for your screen.
+- **AI upscaling on RTX cards.** A video smaller than your screen is enlarged by NVIDIA's RTX Video Super Resolution when it's switched on (Exo Launcher's PC > Display), and steps aside while a game runs.
 - **Glass that moves with the picture.** The glass under the controls is drawn by the player as part of each frame, so it never lags the video and never copies frames off the graphics card. With the controls up over 4K60 Dolby Vision, the test PC dropped no frames.
 - **Audio, subtitles and speed** live in one menu under the sliders button at the top right. Pick a language once and the show's next episodes start with it. Subtitles rise above the controls while they show.
 - **Skip intro and Up Next.** Openings and credits marked by your server (Jellyfin's media segments) or named in the file's chapters get a Skip button; near the end of an episode the next one counts down, and **Not now** stops it.

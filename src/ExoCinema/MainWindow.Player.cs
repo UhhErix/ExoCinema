@@ -138,6 +138,8 @@ public sealed partial class MainWindow
         {
             _log.Mark("file-loaded", now - _loadAt);
         }
+        // The decoder and the picture's size are known (or changed): upscale or not, for this video.
+        if (name == "video-reconfig") ApplyUpscaling();
         OnUi(() =>
         {
             if (name == "playback-restart") _jellyfin.OnPlaybackRestart();
@@ -150,12 +152,83 @@ public sealed partial class MainWindow
         });
     }
 
+    // AI upscaling: on an RTX card with NVIDIA's RTX Video Super Resolution switched on (Exo Launcher's PC › Display;
+    // Exo Cinema only reads it), a picture smaller than the screen is enlarged by the driver's upscaler through mpv's
+    // Direct3D 11 video processor, as Edge and Chrome ask for it. Only for SDR video decoded on the card, with Picture
+    // on High quality. With the switch off the driver's processor would only scale plainly, worse than mpv's own
+    // scalers, so then nothing changes.
+    private readonly Lock _upscaleGate = new();
+    private bool _upscaleWanted = true, _upscaleOffNoted;
+    private string _upscaleFilter = "";
+
+    private void SetUpscaling(bool wanted)
+    {
+        _upscaleWanted = wanted;
+        ApplyUpscaling();
+    }
+
+    private void ApplyUpscaling()
+    {
+        if (_mpv is not { } mpv || _closingWindow) return;
+        lock (_upscaleGate)
+        {
+            try
+            {
+                static double Num(string? s) => double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
+                var want = "";
+                double scale = 0;
+                var height = Num(mpv.Get("video-params/h"));
+                if (_upscaleWanted && height > 0 && PlayerTuning.Vendor == "nvidia" && PlayerTuning.Gpu.Contains("RTX", StringComparison.OrdinalIgnoreCase)
+                    && mpv.Get("hwdec-current") == "d3d11va" && mpv.Get("video-params/gamma") is not ("pq" or "hlg") && !GameRunning())
+                {
+                    scale = Math.Min(4, Math.Max(Num(mpv.Get("display-height")), Num(mpv.Get("osd-height"))) / height);
+                    var setting = scale >= 1.2 ? NvidiaVideo.SuperResolutionSetting() : null;
+                    if (setting > 0)
+                        want = $"@exo-upscale:d3d11vpp=scaling-mode=nvidia:scale={scale.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}";
+                    else if (scale >= 1.2 && !_upscaleOffNoted)
+                    {
+                        // Said once: the picture would gain from it, but the driver's switch is off (or can't be read).
+                        _upscaleOffNoted = true;
+                        _log.Write($"upscaling: RTX Video Super Resolution is {(setting == 0 ? "off" : "unreadable")} in the driver; mpv scales instead");
+                    }
+                }
+                if (want == _upscaleFilter) return;
+                if (_upscaleFilter.Length > 0) mpv.Command("vf", "remove", "@exo-upscale");
+                if (want.Length > 0 && mpv.Command("vf", "add", want) < 0) want = "";
+                _upscaleFilter = want;
+                _log.Write(want.Length > 0 ? $"upscaling: RTX Video Super Resolution, {height:0}p x{scale:0.##}" : "upscaling: off");
+            }
+            catch (Exception e) { _log.Write($"upscaling: {e.Message}"); }
+        }
+    }
+
+    // A game is running: Exo Launcher signals it with a named event while any library game runs (its
+    // Services/GameRunningSignal.cs, agreed with it). The upscaler takes graphics time from the game, so it steps aside.
+    // Without Exo Launcher the event doesn't exist, which reads as no game. Opened afresh each time: a handle kept open
+    // would keep the event alive after Exo Launcher closed.
+    private static bool GameRunning()
+    {
+        var handle = OpenEventW(0x00100000 /* SYNCHRONIZE */, false, @"Local\ExoLauncher.GameRunning");
+        if (handle == IntPtr.Zero) return false;
+        try { return WaitForSingleObject(handle, 0) == 0; }
+        finally { CloseHandle(handle); }
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern IntPtr OpenEventW(uint access, bool inherit, string name);
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    private static extern uint WaitForSingleObject(IntPtr handle, uint milliseconds);
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    private static extern bool CloseHandle(IntPtr handle);
+
     // While a video plays, a line a minute in app.log: the frames dropped and late in that minute, and how the video
     // plays, so "is it smooth?" has an answer after the fact.
     private Timer? _performance;
     private long _drops, _late;
 
-    private void WatchPerformance() => _performance ??= new Timer(_ => LogPerformance(), null, 60_000, 60_000);
+    private void WatchPerformance() => _performance ??= new Timer(_ => { LogPerformance(); ApplyUpscaling(); }, null, 60_000, 60_000);
 
     private void LogPerformance()
     {

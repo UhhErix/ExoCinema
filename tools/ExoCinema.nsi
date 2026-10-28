@@ -80,6 +80,7 @@ UninstPage instfiles
 Var StatusFile  ; /STATUSFILE=: where each step is written for Setup's window
 Var DesktopLink ; /DESKTOP=: "" leaves the desktop shortcut as it is, "0" or "1"
 Var NoLaunch    ; /NOLAUNCH: Open Exo Cinema is left to Setup's window (or to nobody)
+Var Tries       ; the old app folder's rename, tried again while its last helpers exit
 
 !macro Status TEXT
   DetailPrint "${TEXT}"
@@ -273,9 +274,18 @@ Section "Exo Cinema" SecApp
   !insertmacro Status "Installing"
   StrCpy $R7 "0"
   IfFileExists "$INSTDIR\ExoCinema.exe" 0 no_old
+    ; WebView2's helpers can hold the folder for some seconds after Exo Cinema closes, and Windows won't rename a folder
+    ; in use: try again for up to 20 s before calling it busy (Exo Browser's updates failed on exactly this).
+    StrCpy $Tries 0
+    rename_old:
     ClearErrors
     Rename "$INSTDIR" "$R5"
-    IfErrors swap_prepare_fail
+    IfErrors 0 renamed_old
+      IntOp $Tries $Tries + 1
+      IntCmp $Tries 40 swap_prepare_fail
+      Sleep 500
+      Goto rename_old
+    renamed_old:
     StrCpy $R7 "1"
   no_old:
   CreateDirectory "$R8"

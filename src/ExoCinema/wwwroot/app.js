@@ -605,6 +605,8 @@ function setPref(key, value) {
 function applyPrefs() {
   document.documentElement.dataset.material = pref('material')
   send({ cmd: 'set', name: 'hwdec', value: pref('hwdec') === 'on' ? 'auto-safe' : 'no' })
+  // High quality includes the driver's AI upscaling where this PC has it switched on (MainWindow.Player.cs).
+  send({ cmd: 'upscale', on: pref('quality') === 'high' })
   if (pref('quality') === 'high') send({ cmd: 'command', args: ['apply-profile', 'high-quality'] })
   else for (const [name, value] of [['scale', 'spline36'], ['cscale', 'spline36'], ['dscale', 'mitchell'], ['deband', 'no']]) send({ cmd: 'set', name, value })
 }

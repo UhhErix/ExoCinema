@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.4 — October 28, 2026
+
+AI upscaling on RTX cards, and updates that wait for the folder.
+
+- **AI upscaling on RTX cards.** A video smaller than the screen (720p on a 1080p screen, 1080p on a 1440p or 4K one) is enlarged by NVIDIA's RTX Video Super Resolution as it plays, through mpv's Direct3D 11 video processor, as Edge and Chrome ask for it: sharper edges and finer detail than any scaler can draw. It takes Picture on High quality, SDR video decoded on the card, and RTX Video Super Resolution on in Exo Launcher's PC > Display (or NVIDIA's own settings); Exo Cinema reads that switch and never changes it. With it off, mpv's own high-quality scalers enlarge the picture as before. _Verified: on an RTX 3070, the same frame scaled 2x had four times the edge detail with it; 720p played upscaled to 1080p with no frames dropped._
+- **Games come first.** While Exo Launcher has a game running, the upscaler steps aside so the game keeps the graphics card, and comes back when the game ends. _Verified: with Exo Launcher's game signal set and cleared._
+- **Updates that wait.** An update stopped at "Exo Cinema's folder is in use" when one of the app's WebView2 helpers was still closing; Setup now tries again for up to 20 seconds. Found by Exo Browser, whose updates failed the same way. _Verified: an update with the app folder held for 6 seconds finished in 9._
+
 ## 1.0.3 — October 28, 2026
 
 The best version of every title, or your pick.

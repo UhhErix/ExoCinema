@@ -50,6 +50,7 @@ Everything can be changed later in Settings, from your picture at the top right.
 ## Settings
 
 - **Look > Material:** Glass, or Solid for plain dark panels.
+- **AI upscaling:** with Picture on High quality, an NVIDIA RTX card enlarges video smaller than your screen with RTX Video Super Resolution, when that's on in Exo Launcher's PC > Display (or NVIDIA's own settings). It steps aside while a game runs.
 - **Playback:** Picture; Source (Best plays the best version of a title for this PC, Ask lets you pick one when your server has several); hardware decoding (leave it on unless a video shows wrong colors or blocks); and Play next episode.
 - **Account:** your Jellyfin account page (opens in your browser) and Sign out.
 - **Storage:** the pictures kept from your server, and **Clear** to empty them.
