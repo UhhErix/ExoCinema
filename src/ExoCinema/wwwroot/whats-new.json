@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.0.7",
+    "items": [
+      {
+        "icon": "Private",
+        "title": "The newest .NET",
+        "detail": "Exo Cinema runs on .NET 10.0.14, with Microsoft's latest fixes."
+      }
+    ]
+  },
+  {
     "version": "1.0.6",
     "items": [
       {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.7 — October 28, 2026
+
+Everything Exo Cinema is built on is on its newest version.
+
+- **The newest .NET.** Exo Cinema is built with the .NET 10.0.403 SDK and carries the .NET 10.0.14 runtime (from 10.0.13), with Microsoft's latest servicing fixes; Exo Launcher moved to it at the same time. _Verified: end-to-end; the release build loads its own 10.0.14 runtime, plays 720p with RTX Super Resolution and 4K60 Dolby Vision with no dropped frames, and its Settings and log work as in 1.0.6._
+- **Up to date.** libmpv (mpv v0.41.0-1320, FFmpeg N-128134), every NuGet package (Windows App SDK 2.6.4, WebView2 SDK 1.0.4314.35, ProtectedData 10.0.14) and the installer's NSIS 3.13 were already on their newest versions. _Checked in code only._
+
 ## 1.0.6 — October 28, 2026
 
 Your links and keys stay yours, on screen and in the log.
