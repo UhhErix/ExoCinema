@@ -1,0 +1,154 @@
+/* Exo's Liquid Glass, taken from Exo Launcher's working copy (ui/src/styles/glass.css and tokens.css, Void, 2026-10-27).
+   Small glass: clear over the backdrop blurred 10px and toned, one even rim. Large glass (menus, sheets): a darker,
+   thicker pane. A press lights the glass from within where it lands.
+   Over video mpv draws the blur itself, under the glass shapes (player.js, Shaders/exo-glass.glsl), since it draws
+   under the page where backdrop-filter can't see. */
+
+@property --glass-glow {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  color-scheme: dark;
+  --color-bg: #000000;
+  --color-fg: #ffffff;
+  --color-muted: #9d9d9d;
+  --color-faint: #868686;
+  --color-primary-fg: #000000;
+  --color-bad: #ff6b6b;
+  --exo-ink-rgb: 255 255 255;
+  --exo-primary-hover: #e8e8e8;
+  --hover-fill: rgb(255 255 255 / 0.1);
+  --exo-pressed: rgb(255 255 255 / 0.133);
+  --exo-selected: rgb(255 255 255 / 0.15);
+  --exo-track: rgb(255 255 255 / 0.17);
+  --exo-float-line: #1f1f1f;
+  --exo-panel-ink: #ffffff;
+  --exo-glass-secondary: #e4e4e4;
+  --exo-glass-panel-secondary: #dcdcdc;
+
+  --glassy-rim: inset 0 0 0 transparent;
+  --glassy-ring: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  --glassy-words: 0 1px 2px rgb(0 0 0 / 0.45);
+  --glassy-shadow: 0 0 0 transparent;
+  --glassy-shadow-raised: 0 0 40px rgb(0 0 0 / 0.5);
+  --glassy-sheen: none;
+  --glassy-overlay: rgb(0 0 0 / 0.36);
+  --glassy-overlay-tone: brightness(0.66);
+  --glassy-pane: transparent;
+  --glassy-pane-tone: brightness(0.62) saturate(1.8);
+  --glassy-still: rgb(0 0 0 / 0.8);
+  --glassy-still-panel: rgb(0 0 0 / 0.92);
+  --glassy-still-control: rgb(0 0 0 / 0.65);
+
+  --exo-fill: transparent;
+  --exo-control-glass: blur(10px) brightness(0.62) saturate(1.8);
+  --exo-rim: var(--glassy-ring), var(--glassy-rim);
+  --exo-rim-pressed: inset 0 0 0 1px rgb(255 255 255 / 0.08), var(--glassy-rim);
+  --exo-glass-rim: var(--glassy-ring), var(--glassy-rim);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms;
+  --dur-fade: 160ms;
+  --dur-morph: 220ms;
+}
+
+/* No scrollbar in Exo: everything scrolls by wheel, trackpad, keys and touch. Contrast themes keep Windows' own. */
+* { scrollbar-width: none; }
+
+@media (forced-colors: active) {
+  * { scrollbar-width: auto; }
+}
+
+.exo-glass {
+  position: relative;
+  --color-muted: var(--exo-glass-secondary);
+  --color-faint: var(--exo-glass-secondary);
+  --hover-fill: rgb(var(--exo-ink-rgb) / 0.06);
+  --exo-selected: rgb(var(--exo-ink-rgb) / 0.07);
+  --exo-pressed: rgb(var(--exo-ink-rgb) / 0.12);
+  isolation: isolate;
+  color: var(--color-fg);
+  background-color: var(--exo-fill);
+  background-image: var(--glassy-sheen);
+  backdrop-filter: var(--exo-control-glass);
+  box-shadow: var(--exo-glass-rim), var(--glassy-shadow);
+  text-shadow: var(--glassy-words);
+}
+
+.exo-glass .is-primary { text-shadow: none; }
+
+.exo-glass.is-panel {
+  --color-fg: var(--exo-panel-ink);
+  --color-muted: var(--exo-glass-panel-secondary);
+  --color-faint: var(--exo-glass-panel-secondary);
+  --hover-fill: rgb(var(--exo-ink-rgb) / 0.07);
+  --exo-selected: rgb(var(--exo-ink-rgb) / 0.1);
+  --exo-pressed: rgb(var(--exo-ink-rgb) / 0.14);
+  background-color: var(--glassy-overlay);
+  background-image: var(--glassy-sheen);
+  backdrop-filter: blur(20px) saturate(1.8) var(--glassy-overlay-tone);
+  box-shadow: var(--glassy-ring), var(--glassy-rim), var(--glassy-shadow-raised);
+}
+
+.exo-glass.is-menu {
+  backdrop-filter: blur(16px) saturate(1.8) var(--glassy-overlay-tone);
+}
+
+/* Over art (cards, a backdrop, the video): the deeper dim of Exo's badges, so small words keep 4.5:1. */
+.exo-glass.is-over-art {
+  --exo-control-glass: blur(10px) brightness(0.34) saturate(1.6); /* no contrast(): it lifts black to a gray */
+}
+
+.exo-glass :is(button, a, [role="menuitem"], [role="option"], li):hover,
+button.exo-glass:hover {
+  --color-muted: var(--color-fg);
+  --color-faint: var(--color-fg);
+}
+
+/* Glass hides the page from glass inside it, so a control on glass is clear on the glass it sits on. */
+.exo-glass * {
+  --exo-control-glass: none;
+  --exo-fill: transparent;
+}
+
+/* Light from within: a press lights the glass where it lands and spreads as it lets go. */
+.exo-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle calc(24px + var(--glass-glow) * 56px) at var(--glass-x, 50%) var(--glass-y, 50%),
+      rgb(var(--exo-ink-rgb) / calc(var(--glass-glow) * 0.16)), transparent);
+  transition: --glass-glow 420ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.exo-glass:hover:not(:disabled) {
+    background-image: linear-gradient(var(--hover-fill), var(--hover-fill)), var(--glassy-sheen);
+  }
+}
+
+.exo-glass:active { --glass-glow: 1; }
+.exo-glass:active::after { transition-duration: 90ms; }
+
+.exo-glass:focus-visible,
+.exo-glass :focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: -2px;
+}
+
+/* Solid (Settings, later) and Windows' contrast themes make it solid: no backdrop, the line stays. Nothing else
+   switches it, not Windows' Transparency effects switch (often off for speed, which a still glass doesn't cost),
+   as in Exo Launcher. */
+:root[data-material="solid"] .exo-glass { backdrop-filter: none; background-color: #121212; }
+:root[data-material="solid"] .exo-glass.is-panel { background-color: #000; }
+
+@media (forced-colors: active) {
+  .exo-glass { backdrop-filter: none; background-color: Canvas; }
+}

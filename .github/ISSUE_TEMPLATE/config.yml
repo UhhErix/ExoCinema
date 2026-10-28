@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Getting started and help
+    url: https://github.com/UhhErix/ExoCinema/blob/main/docs/HELP.md
+    about: Installing, signing in to Jellyfin, the player, Settings and updates.
+  - name: Report a security problem privately
+    url: https://github.com/UhhErix/ExoCinema/security/advisories/new
+    about: Please don't post security problems in a public issue.

@@ -1,0 +1,30 @@
+#include <winres.h>
+#include "setup-config.h"
+1 ICON "../../src/ExoCinema/Assets/ExoCinema.ico"
+1 RT_MANIFEST "setup.manifest"
+101 RCDATA "../build/ui.pack"
+// Exo Cinema's in-app updater checks these two names before it runs a downloaded Setup (AppUpdater.cs).
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VERSION_COMMA
+ PRODUCTVERSION VERSION_COMMA
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904b0"
+    BEGIN
+      VALUE "CompanyName", "UhhErix"
+      VALUE "FileDescription", "Exo Cinema Setup"
+      VALUE "FileVersion", VERSION_TEXT
+      VALUE "ProductName", "Exo Cinema"
+      VALUE "ProductVersion", VERSION_TEXT
+      VALUE "LegalCopyright", "Copyright (c) 2026 UhhErix"
+      VALUE "OriginalFilename", "ExoCinema-Setup.exe"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

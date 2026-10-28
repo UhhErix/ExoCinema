@@ -1,0 +1,11 @@
+bin/
+obj/
+*.user
+.vs/
+# libmpv is fetched, not committed (lib/mpv/SOURCE.txt says which build and its hash).
+lib/mpv/*.dll
+# Release builds (tools/Build-Release.ps1) and Setup's window (setup/build.ps1).
+out/
+artifacts/
+setup/build/
+setup/out/

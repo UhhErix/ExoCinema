@@ -1,0 +1,57 @@
+name: Report a problem
+description: Something in Exo Cinema isn't working as expected.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [help guide](https://github.com/UhhErix/ExoCinema/blob/main/docs/HELP.md) and existing issues first. This report is public: remove your server's address, user names, email addresses and personal file paths from anything you attach. Security problems go [here, privately](https://github.com/UhhErix/ExoCinema/security/advisories/new).
+  - type: input
+    id: version
+    attributes:
+      label: Exo Cinema version
+      description: The version shown in Settings > About.
+      placeholder: "Settings > About"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where does it happen?
+      options:
+        - Install, update or uninstall
+        - Signing in
+        - Home or a library
+        - A title's page
+        - Playing a video (picture, sound or subtitles)
+        - Buffering or a video that won't start
+        - The player's controls
+        - Settings
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected. Include the exact error message if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we reproduce it?
+      description: List the steps, and say whether it happens every time or only sometimes. For a video, say what kind of file it is (for example 4K HEVC HDR, or 1080p H.264) and your Jellyfin version.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Your PC
+      description: Your Windows version and graphics card.
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Optional. The last lines of %LocalAppData%\ExoCinema\app.log, with your server's address taken out.
+      render: text

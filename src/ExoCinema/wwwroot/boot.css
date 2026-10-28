@@ -1,0 +1,61 @@
+/* The opening, as Exo Launcher's (its art.css › .exo-boot): the app icon itself, so it is exactly as sharp and lit as
+   the icon on the taskbar. It settles in once, from 0.94 and 8px low to rest, on the spring, while a soft light rises
+   behind it, then holds still while Exo Cinema loads. Transform and opacity only, on its own layer, so the compositor
+   runs it at the screen's rate however busy the page is behind it; it grows to its rest size, never past it. */
+
+:root {
+  --ease-spring: linear(0, 0.005 1.8%, 0.018 3.7%, 0.04 5.7%, 0.074 8%, 0.111 10.2%, 0.156 12.5%, 0.437 25.8%,
+    0.512 29.7%, 0.576 33.2%, 0.645 37.3%, 0.703 41.3%, 0.756 45.5%, 0.803 49.8%, 0.846 54.5%, 0.883 59.5%,
+    0.913 64.7%, 0.939 70.3%, 0.958 76%, 0.973 82%, 0.986 90.2%, 0.995 99.8%, 1);
+}
+
+.exo-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.exo-boot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(42% 38% at 50% 50%, rgb(255 255 255 / 0.086) 0%, #000 100%);
+  pointer-events: none;
+  opacity: 0;
+  will-change: opacity;
+}
+
+.exo-boot.is-playing::before {
+  opacity: 1;
+  animation: exo-boot-fade 900ms var(--ease-out) 120ms both;
+}
+
+.exo-boot-icon {
+  display: block;
+  width: 128px;
+  height: 128px;
+  opacity: 0;
+  will-change: transform, opacity;
+  user-select: none;
+}
+
+.exo-boot.is-playing .exo-boot-icon {
+  opacity: 1;
+  animation: exo-boot-fade 360ms var(--ease-out) both, exo-boot-settle 640ms var(--ease-spring) both;
+}
+
+@keyframes exo-boot-fade {
+  from { opacity: 0; }
+}
+
+@keyframes exo-boot-settle {
+  from { transform: translateY(8px) scale(0.94); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exo-boot::before, .exo-boot .exo-boot-icon { opacity: 1; animation: none; }
+}

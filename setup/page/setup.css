@@ -1,0 +1,425 @@
+/* Exo Cinema Setup (setup/src/main.cpp): one 460 x 520 window laid out as Exo Launcher's Setup is (its
+   ui/src/setup/setup.css, with the button, switch and progress bar it draws them with), in Exo Cinema's own colors,
+   ink and glass (glass.css, packed beside this file) and Inter. */
+
+/* Inter 4.1 (SIL OFL 1.1, fonts/LICENSE-Inter.txt): the upright cut is all the screens use. */
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: block;
+  font-weight: 100 900;
+  src: url("fonts/InterVariable.woff2") format("woff2");
+}
+
+/* What glass.css leaves to app.css or doesn't carry: Exo's durations, its spring, the good green and a row's radius. */
+:root {
+  --color-good: #3dd68c;
+  --dur-press: 90ms;
+  --dur-quick: 120ms;
+  --dur-base: 160ms;
+  --dur-move: 220ms;
+  --dur-flight: 300ms;
+  --ease-spring: linear(0, 0.005 1.8%, 0.018 3.7%, 0.04 5.7%, 0.074 8%, 0.111 10.2%, 0.156 12.5%, 0.437 25.8%, 0.512 29.7%, 0.576 33.2%, 0.645 37.3%, 0.703 41.3%, 0.756 45.5%, 0.803 49.8%, 0.846 54.5%, 0.883 59.5%, 0.913 64.7%, 0.939 70.3%, 0.958 76%, 0.973 82%, 0.986 90.2%, 0.995 99.8%, 1);
+  --exo-row-radius: 12px;
+  /* A clear control on the black page: the ink at 6% and the glass's one line (app.css .set-btn, .exo-field). */
+  --exo-clear: rgb(var(--exo-ink-rgb) / 0.06);
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: "Inter Variable", "Inter", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-feature-settings: "ss01" 1, "cv05" 1, "ss07" 1;
+  font-synthesis: none;
+  font-kerning: normal;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+svg { display: block; flex: none; }
+img { display: block; }
+
+/* The ring shows for the keyboard only (setup.js marks the page once a key moves focus), so the first screen opens clean. */
+:focus { outline: none; }
+.is-keyboard :focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+
+.exo-setup {
+  display: grid;
+  grid-template-rows: 40px 1fr;
+  height: 100%;
+}
+
+/* The title band: drag it to move the window; minimize and close at the right, as Exo's top bar. */
+.exo-setup-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 6px;
+}
+
+.exo-setup-bar-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.exo-winbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: var(--color-muted);
+  transition: color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out), scale var(--dur-quick) var(--ease-out);
+}
+
+.exo-winbtn svg { width: 16px; height: 16px; }
+.exo-winbtn:disabled { opacity: 0.5; cursor: default; }
+
+@media (hover: hover) and (pointer: fine) {
+  .exo-winbtn:hover:not(:disabled) { background: var(--hover-fill); color: var(--color-fg); }
+  .exo-winbtn.is-close:hover:not(:disabled) { color: var(--color-bad); }
+}
+
+.exo-setup-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 48px 32px;
+  text-align: center;
+  transition: opacity var(--dur-base) var(--ease-out), translate var(--dur-move) var(--ease-spring);
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+.exo-setup-screen h1 {
+  margin: 20px 0 6px;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.exo-setup-screen p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.exo-setup-mark {
+  width: 72px;
+  height: 72px;
+  transition: scale var(--dur-flight) var(--ease-spring);
+
+  @starting-style {
+    scale: 0.88;
+  }
+}
+
+.exo-setup-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 32px;
+}
+
+/* Exo's buttons (Launcher's .button): a 40px capsule, 13px Medium. Primary is the ink with black words. */
+.exo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.53846;
+  white-space: nowrap;
+  transition: scale var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
+}
+
+.exo-btn.is-primary {
+  background: var(--color-fg);
+  color: var(--color-primary-fg);
+}
+
+.exo-btn.is-ghost { color: var(--color-fg); }
+
+@media (hover: hover) {
+  .exo-btn.is-primary:hover { background: var(--exo-primary-hover); }
+  .exo-btn.is-ghost:hover { background: var(--hover-fill); }
+}
+
+.exo-btn.is-ghost:active { background: var(--exo-pressed); }
+
+:is(.exo-btn, .exo-set-btn, .exo-winbtn):active:not(:disabled) {
+  scale: 0.97;
+  transition-duration: var(--dur-press);
+}
+
+.exo-setup-cta { width: 220px; }
+
+.exo-setup-more svg {
+  width: 14px;
+  height: 14px;
+  margin: 0 -2px 0 4px;
+  transition: rotate var(--dur-move) var(--ease-spring);
+}
+
+.exo-setup-more[aria-expanded="true"] svg { rotate: 180deg; }
+
+/* Uninstall asks as Exo's dialog does (Launcher's .exo-dialog-actions): equal capsules on one row, its width; Cancel
+   first and focused, so Enter alone never uninstalls; Uninstall in red. */
+.exo-setup-ask {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.exo-set-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--exo-clear);
+  box-shadow: var(--glassy-ring);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color var(--dur-quick) var(--ease-out), scale var(--dur-quick) var(--ease-out);
+}
+
+.exo-set-btn.is-danger { color: color-mix(in srgb, var(--color-bad) 82%, white); }
+
+@media (hover: hover) and (pointer: fine) {
+  .exo-set-btn:hover { background: var(--hover-fill); }
+}
+
+.exo-set-btn:active { background: var(--exo-pressed); }
+
+/* Options open with height, as Exo's panels do. */
+.exo-setup-options {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  margin-top: 12px;
+  opacity: 0;
+  transition: grid-template-rows var(--dur-move) var(--ease-spring), opacity var(--dur-base) var(--ease-out);
+}
+
+.exo-setup-options[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.exo-setup-options-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.exo-setup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--exo-row-radius);
+  background: var(--exo-clear);
+  box-shadow: var(--glassy-ring);
+  font-size: 13px;
+  text-align: left;
+}
+
+/* Exo's switch (Launcher's components/Switch with its system.css sizes): a 40 x 24 track, green when on. */
+.switch {
+  display: flex;
+  flex: none;
+  border-radius: 999px;
+}
+
+.switch__control {
+  display: flex;
+  align-items: center;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--exo-track);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.switch[aria-checked="true"] .switch__control { background: var(--color-good); }
+
+.switch__thumb {
+  width: 20px;
+  height: 20px;
+  margin-inline-start: 2px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35), 0 0 0 0.5px rgb(0 0 0 / 0.2);
+  transition: translate var(--dur-move) var(--ease-spring);
+}
+
+.switch[aria-checked="true"] .switch__thumb { translate: 16px; }
+
+@media (hover: hover) {
+  .switch:is(:hover, :active) .switch__control { background: rgb(var(--exo-ink-rgb) / 0.2); }
+  .switch[aria-checked="true"]:is(:hover, :active) .switch__control { background: color-mix(in oklab, var(--color-good) 88%, #fff); }
+}
+
+/* Progress: Exo's large bar (Launcher's components/ui/Progress and progress.css). It glides until the engine
+   reports a value, then fills to each one with a soft sheen. */
+.exo-progress {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 280px;
+  height: 6px;
+  margin-top: 28px;
+  animation: exo-progress-in var(--dur-base) var(--ease-out) 0.3s backwards;
+}
+
+.exo-progress-track {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-fg) 16%, transparent);
+  box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.18), inset 0 0 0 0.5px rgb(var(--exo-ink-rgb) / 0.08);
+}
+
+.exo-progress-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-fg) 55%, transparent), var(--color-fg) calc(100% - 10px), color-mix(in srgb, var(--color-fg) 60%, white) 100%);
+  transform: translateX(calc((var(--exo-progress, 0) - 1) * 100%));
+  transition: transform 240ms linear;
+}
+
+.exo-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: soft-light;
+  background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.55) 50%, transparent 100%) 0 0 / 40% 100% no-repeat;
+  animation: exo-progress-sheen 1.6s linear infinite;
+}
+
+.exo-progress.is-unknown .exo-progress-fill {
+  width: 34%;
+  background: linear-gradient(90deg, transparent, var(--color-fg));
+  transform: none;
+  animation: exo-progress-glide 1.4s linear infinite;
+}
+
+.exo-progress.is-unknown .exo-progress-fill::after { animation: none; }
+
+@keyframes exo-progress-in { from { opacity: 0; } }
+@keyframes exo-progress-sheen { from { background-position: -60% 0; } to { background-position: 160% 0; } }
+@keyframes exo-progress-glide { from { transform: translate(-100%); } to { transform: translate(295%); } }
+
+.exo-setup-screen .exo-setup-status {
+  min-height: 19px;
+  margin-top: 14px;
+  color: var(--color-faint);
+}
+
+/* Done and failed: a round badge that settles in on the spring. */
+.exo-setup-badge {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: var(--exo-clear);
+  box-shadow: var(--glassy-ring);
+  transition: scale var(--dur-flight) var(--ease-spring);
+
+  @starting-style {
+    scale: 0.6;
+  }
+}
+
+.exo-setup-badge svg {
+  width: 28px;
+  height: 28px;
+}
+
+.exo-setup-badge.is-good { color: var(--color-good); }
+.exo-setup-badge.is-bad { color: var(--color-bad); }
+
+.exo-setup-problem {
+  max-width: 340px;
+  overflow-wrap: anywhere;
+  user-select: text;
+  cursor: text;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exo-setup-screen,
+  .exo-setup-mark,
+  .exo-setup-badge,
+  .exo-setup-options,
+  .exo-setup-more svg,
+  .switch__thumb,
+  .exo-progress-fill {
+    transition: none;
+  }
+
+  .exo-progress-fill::after { animation: none; }
+
+  .exo-progress.is-unknown .exo-progress-fill {
+    width: 100%;
+    opacity: 0.45;
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .switch__control { forced-color-adjust: none; background: Canvas; border: 1px solid ButtonText; }
+  .switch__thumb { forced-color-adjust: none; background: ButtonText; }
+  .switch[aria-checked="true"] .switch__control { background: Highlight; border-color: Highlight; }
+  .switch[aria-checked="true"] .switch__thumb { background: HighlightText; }
+  .exo-progress-track { background: Canvas; box-shadow: inset 0 0 0 1px CanvasText; }
+  .exo-progress-fill { background: Highlight; }
+  .exo-progress-fill::after { display: none; }
+  :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+}
