@@ -4,24 +4,24 @@
 
 <p align="center">
   <a href="https://github.com/UhhErix/ExoCinema/releases/latest/download/ExoCinema-Setup.exe"><strong>Download for Windows 11</strong></a>
-  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.1.0">What's new in 1.1.0</a>
+  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.2.0">What's new in 1.2.0</a>
   · <a href="CHANGELOG.md">Changelog</a>
   · <a href="PRIVACY.md">Privacy</a>
   · <a href="SECURITY.md">Security</a>
   · <a href="LICENSE">License</a>
 </p>
 
-![The player paused on a 4K Dolby Vision video, the audio, subtitles and speed menu open at the top right, the controls in Liquid Glass over the picture](docs/media/hero.jpg)
+![Exo Cinema playing Sol Levante, Netflix's open anime short, with the Liquid Glass controls over the picture](docs/media/hero.jpg)
 
 ## Download
 
 | File | Version | SHA-256 |
 | --- | --- | --- |
-| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.1.0/ExoCinema-Setup.exe) | 1.1.0 | `0ab3b311c8372760a14d0a4324f8ea5ce4e8215813e6d2802c621112784757e5` |
+| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.2.0/ExoCinema-Setup.exe) | 1.2.0 | `7904e3134b1613eec1318896d46ec07b8946a6ae52682fdc56653aaf95a73849` |
 
 **Requirements:** Windows 11 x64 with WebView2 (built into Windows 11; Setup installs it if it's missing), and a Jellyfin server to sign in to. Installs for your Windows user only, in `%LOCALAPPDATA%\ExoCinema\app`, with no administrator rights.
 
-**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.1.0):
+**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.2.0):
 
 ```powershell
 Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
@@ -31,11 +31,13 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 
 1. Download **ExoCinema-Setup.exe** (above) and check its hash.
 2. Run it, choose **Install**, then **Open Exo Cinema**. The first run signs you in to your Jellyfin server and sets how you like to watch. Every choice can be changed later in Settings.
-3. New versions show in **Settings > About**. **Install update** downloads it, checks it and installs it over the one you have; your sign-in and settings stay.
+3. When a new version is out, Exo Cinema offers it as it opens: **Update now** downloads it, checks it and installs it over the one you have, and your sign-in and settings stay. It never interrupts while it's open.
 
 ![First run: welcome to Exo Cinema](docs/media/first-run.jpg)
 
 ## What's built in
+
+![Home: Continue Watching and a library's newest films, under the backdrop of the film you're in the middle of](docs/media/home.jpg)
 
 - **Your Jellyfin library:** Home with Continue Watching, Next Up and what's new in each library, your libraries in the Bar, every show by season, and Ctrl+K to search the whole server.
 - **Progress that follows you:** where you stop and what you've watched go back to Jellyfin as you watch, so your phone, TV and every other Jellyfin app pick up where you left off.
@@ -43,6 +45,8 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 - **Liquid Glass over the picture:** the controls blur the video under them as it plays, drawn by the player on the graphics card at no cost to playback.
 - **The things you reach for:** audio and subtitle tracks remembered for each show, playback speed, Skip intro and Skip credits, and Up Next that plays the next episode on its own.
 - **Steady over a slow link:** the player reads far ahead, waits for a few seconds of picture rather than stuttering, and reconnects when a server drops the stream.
+- **Media keys and Windows' media controls:** play, pause and next from the keyboard with another window in front, and what's playing, with its poster, in Windows' media controls and Exo Launcher's Now Playing.
+- **Light on your PC:** close to no CPU while idle or behind a game, and the picture's quality picked for your PC as it plays.
 - **Exo Launcher's look:** Void black, Liquid Glass or solid, Inter and Exo's icons, and an opening that has Home ready when it lifts.
 
 ## The player
@@ -56,14 +60,12 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 
 ## Settings
 
-![Settings: Look, Playback, Account, Storage and About](docs/media/settings.jpg)
-
-- **Look:** Liquid Glass or solid.
-- **Playback:** picture quality, hardware decoding and whether the next episode plays by itself.
+- **Look:** Liquid Glass or solid, and Reduce motion.
+- **Playback:** Source (play the best version of a title for this PC, or ask which when your server has several) and whether the next episode plays by itself. The picture's quality and hardware decoding need no setting: Exo Cinema picks them for your PC.
 - **Account:** your Jellyfin account page and Sign out.
-- **About:** your version, what's new, and updates from GitHub, checked and installed in place.
+- **About:** your version, what's new, and Check for updates.
 
-![What's new in Exo Cinema 1.0.0](docs/media/whats-new.jpg)
+![What's new in Exo Cinema 1.2.0, shown once after an update](docs/media/whats-new.jpg)
 
 ## How it works
 
@@ -75,10 +77,12 @@ Exo Cinema is a native Windows app built like Exo Launcher: WinUI 3 on .NET, wit
 
 ## Privacy and safety
 
-- **No Exo account, no ads, no analytics, no telemetry.** Exo Cinema has no server of its own. Your sign-in and settings stay in `%LocalAppData%\ExoCinema`.
-- **What leaves your PC** is what watching needs: requests to your Jellyfin server (with where you are in what you watch), and the update check to GitHub. The [privacy policy](PRIVACY.md) lists every destination and what is sent.
+- **No Exo account, no ads, no analytics, no telemetry.** Exo's only server in the picture is its update address, which says when a new version is out; nothing you watch or do is sent to it. Your sign-in and settings stay in `%LocalAppData%\ExoCinema`.
+- **What leaves your PC** is what watching needs: requests to your Jellyfin server (with where you are in what you watch), and the update check as Exo Cinema opens (Exo's update address, `updates.getexo.app`, or GitHub when it doesn't answer). The [privacy policy](PRIVACY.md) lists every destination and what is sent.
 - **Your password is never stored.** Exo Cinema keeps only the access token your server gives it, sealed with Windows' data protection for your Windows user.
-- **Found a security problem?** Please [report it privately](https://github.com/UhhErix/ExoCinema/security/advisories/new), not in a public issue. See [SECURITY.md](SECURITY.md).
+- **Found a security problem?** [Report it privately](https://github.com/UhhErix/ExoCinema/security/advisories/new), not in a public issue. See [SECURITY.md](SECURITY.md).
+
+Film images in these pictures: Sol Levante © Akira Saitoh, Production I.G, Netflix (CC BY 4.0); Tears of Steel, Sintel, Big Buck Bunny, Cosmos Laundromat (CC BY 3.0), Spring, Elephants Dream (CC BY 4.0) © Blender Foundation. They come from a test server, not anyone's library.
 
 ## Contributing
 

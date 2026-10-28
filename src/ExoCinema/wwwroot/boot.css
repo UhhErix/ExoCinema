@@ -50,6 +50,6 @@
   from { transform: translateY(8px) scale(0.94); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .exo-boot::before, .exo-boot .exo-boot-icon { opacity: 1; animation: none; }
-}
+/* Reduce motion (Settings › Look): the icon is simply there. */
+:root[data-exo-motion="reduce"] .exo-boot::before,
+:root[data-exo-motion="reduce"] .exo-boot .exo-boot-icon { opacity: 1; animation: none; }

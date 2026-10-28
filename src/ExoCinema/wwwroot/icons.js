@@ -61,6 +61,14 @@ document.addEventListener('pointerdown', (event) => {
 document.addEventListener('keydown', (event) => { if (event.key === 'Tab') document.documentElement.classList.add('is-tabbing') }, true)
 document.addEventListener('pointerdown', () => document.documentElement.classList.remove('is-tabbing'), true)
 
+// Focus the page moves by itself (a sheet, sign-in, the first run) lands only while Exo Cinema is the active window:
+// moving it in a window that just opened in the background brought that window to the front, over a game. Otherwise
+// it lands when the window is next activated, if nothing else took it.
+function focusWhenActive(el) {
+  if (document.hasFocus()) { el.focus({ preventScroll: true }); return }
+  window.addEventListener('focus', () => { if (el.isConnected && !el.closest('[hidden], [inert]') && document.activeElement === document.body) el.focus({ preventScroll: true }) }, { once: true })
+}
+
 // In the background (another window focused, or minimized) the page's loops pause (app.css › data-exo-inactive).
 const markInactive = () => { document.documentElement.dataset.exoInactive = String(document.hidden || !document.hasFocus()) }
 for (const type of ['focus', 'blur']) window.addEventListener(type, markInactive)

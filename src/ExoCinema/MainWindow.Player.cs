@@ -314,9 +314,25 @@ public sealed partial class MainWindow
         _log.Write($"buffering: {seconds:0.0} s; the link gave {speed:0.0} Mb/s, the video needs {needs:0.0} Mb/s");
     }
 
+    // A full-screen change waits until Exo Cinema is the active window: Windows activates a window as its presenter
+    // changes, so one made in the background (an episode ending, its player leaving full screen, while a game is in
+    // front) took the foreground from the game. The F key and a double click always come with the window active.
+    private bool? _pendingFullScreen;
+
     private void SetFullScreen(bool on)
     {
-        if (on == _fullScreen) return;
+        if (on == _fullScreen)
+        {
+            _pendingFullScreen = null;
+            return;
+        }
+        if (GetForegroundWindow() != _hwnd)
+        {
+            _pendingFullScreen = on;
+            Post(new { type = "fullscreen", on = _fullScreen });
+            return;
+        }
+        _pendingFullScreen = null;
         _fullScreen = on;
         if (on)
         {
@@ -336,4 +352,7 @@ public sealed partial class MainWindow
         }
         Post(new { type = "fullscreen", on });
     }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
 }

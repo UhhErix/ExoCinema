@@ -91,7 +91,8 @@
 
   <!-- What's New, after an update and from Settings › About (updates.js). -->
   <div class="whats-new" id="whatsNew" hidden>
-    <div class="whats-new-scrim" data-close-whats-new></div>
+    <div class="whats-new-scrim"></div>
+    <header class="signin-bar"><div class="exo-glass capsule tools-capsule"><span class="window-controls" data-window-controls></span></div></header>
     <section class="exo-glass is-panel whats-new-sheet" role="dialog" aria-modal="true" aria-labelledby="whatsNewTitle" tabindex="-1">
       <h2 id="whatsNewTitle"></h2>
       <div class="whats-new-list" id="whatsNewList"></div>
@@ -99,6 +100,16 @@
         <button type="button" class="primary is-primary" id="whatsNewContinue">Continue</button>
         <button type="button" class="primary is-primary" id="whatsNewInstall" hidden>Install update</button>
       </footer>
+    </section>
+  </div>
+
+  <!-- A newer Exo Cinema, offered as the app opens (updates.js): Update now installs it and opens it again. -->
+  <div class="whats-new update-offer" id="updateOffer" hidden>
+    <div class="whats-new-scrim"></div>
+    <header class="signin-bar"><div class="exo-glass capsule tools-capsule"><span class="window-controls" data-window-controls></span></div></header>
+    <section class="exo-glass is-panel whats-new-sheet" role="dialog" aria-modal="true" aria-labelledby="updateOfferTitle" aria-describedby="updateOfferVersion" tabindex="-1">
+      <div class="update-head"><h2 id="updateOfferTitle">Update available</h2><p class="update-version" id="updateOfferVersion"></p></div>
+      <footer class="update-foot" id="updateOfferFoot"></footer>
     </section>
   </div>
 

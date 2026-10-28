@@ -459,9 +459,7 @@ img { display: block; }
   :is(.card, .episode):hover .art img { filter: brightness(1.08); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  :is(.card, .episode):hover .art { transform: none; }
-}
+:root[data-exo-motion="reduce"] :is(.card, .episode):hover .art { transform: none; }
 
 .card:focus-visible, .episode:focus-visible { outline: none; }
 :is(.card, .episode):focus-visible .art { outline: 2px solid var(--color-fg); outline-offset: 2px; }
@@ -824,9 +822,12 @@ img { display: block; }
 
 .exo-field:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
 .exo-field::placeholder { color: var(--color-muted); }
-/* A link with someone's own keys in it (an add-on's) shows as dots, as a password does: it stays off screenshots and streams. */
+/* A link with someone's own keys in it (an add-on's) shows as dots while nobody is using the field, so it stays off
+   screenshots and streams; clicked into, it shows in full to read, select and copy (dots only had it hidden from its
+   owner too). Copy beside it copies it without showing it. */
 .exo-field.is-secret { -webkit-text-security: disc; }
-.exo-field.is-secret:placeholder-shown { -webkit-text-security: none; }
+.exo-field.is-secret:is(:focus, :placeholder-shown) { -webkit-text-security: none; }
+.addon-field { display: flex; gap: 8px; align-items: center; }
 
 .server-found {
   margin-top: -6px;
@@ -853,13 +854,14 @@ img { display: block; }
   .episode .art { width: 150px; }
 }
 
-/* Windows' reduce motion: nothing slides, grows, springs or loops; things only fade, once. */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    transition-property: opacity !important;
-    animation-name: art-in !important;
-    animation-iteration-count: 1 !important;
-  }
+/* Reduce motion (Settings › Look, the app's own switch, not Windows'): nothing slides, grows, springs or loops;
+   things only fade, once. */
+:root[data-exo-motion="reduce"] *,
+:root[data-exo-motion="reduce"] *::before,
+:root[data-exo-motion="reduce"] *::after {
+  transition-property: opacity !important;
+  animation-name: art-in !important;
+  animation-iteration-count: 1 !important;
 }
 
 /* Loops pause while Exo Cinema is in the background (not the focused window, or hidden), as Exo Launcher's do
@@ -1133,6 +1135,24 @@ html[data-exo-inactive="true"] .mini-bar.is-busy span {
 .whats-new-foot { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
 .whats-new-foot .primary, .whats-new-foot .secondary { height: 40px; }
 .whats-new-foot .secondary { background: rgb(var(--exo-ink-rgb) / 0.06); box-shadow: var(--glassy-ring); }
+
+/* While a sheet holds the window (updates.js › holdWindow), the page behind it can't scroll, and a long list in the
+   sheet doesn't pass its scroll on. */
+html.is-held, html.is-held body { overflow: hidden; }
+.whats-new-list { overscroll-behavior: contain; }
+.whats-new-scrim { touch-action: none; }
+
+/* Update available: the title and the version under it, then Update now, its download's bar, or why it failed. Its
+   changes are What's New's, once the new version opens. */
+.update-offer .whats-new-sheet { width: min(100%, 420px); }
+.update-head { display: grid; gap: 4px; text-align: center; }
+.update-version { margin: 0; color: var(--color-muted); font-size: var(--type-control); }
+.update-foot { display: grid; gap: 14px; }
+.update-progress { display: grid; gap: 10px; justify-items: center; min-height: 40px; align-content: center; }
+.update-progress .mini-bar { width: 100%; }
+.update-status { margin: 0; color: var(--color-muted); font-size: var(--type-control); text-align: center; }
+.update-status.is-bad { color: var(--color-bad); }
+.update-failure { display: grid; gap: 10px; justify-items: center; }
 
 /* ── About: the version row's buttons, and a download's bar beside its words. ─────────────────────────────────── */
 

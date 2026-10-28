@@ -57,8 +57,8 @@ function drawOb(n, dir) {
   }
   step.classList.remove('is-forward', 'is-back')
   if (dir) { void step.offsetWidth; step.classList.add(dir > 0 ? 'is-forward' : 'is-back') }
-  if (name === 'jellyfin' && !session) ($('server').value ? $('username') : $('server')).focus()
-  else step.querySelector('.ob-title').focus({ preventScroll: true })
+  if (name === 'jellyfin' && !session) focusWhenActive($('server').value ? $('username') : $('server'))
+  else focusWhenActive(step.querySelector('.ob-title'))
 }
 
 function note(words, bad = false) {

@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Please report security problems privately: on GitHub, **Security > Report a vulnerability** in this repository. Don't open a public issue for them. Say what you found, how to reproduce it and which version you used (**Settings > About**). You'll get an answer, and a fix ships in the next release with a line in the changelog.
+Report security problems privately: on GitHub, **Security > Report a vulnerability** in this repository. Don't open a public issue for them. Say what you found, how to reproduce it and which version you used (**Settings > About**). You'll get an answer, and a fix ships in the next release with a line in the changelog.
 
 ## How Exo Cinema is put together
 

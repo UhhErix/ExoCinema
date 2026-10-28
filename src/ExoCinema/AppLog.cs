@@ -67,6 +67,12 @@ internal sealed class AppLog
         return Profile.Length > 0 ? text.Replace(Profile, "%USERPROFILE%", StringComparison.OrdinalIgnoreCase) : text;
     }
 
+    /// <summary>The last lines, as written (already cleaned), for Copy logs.</summary>
+    public string Tail(int count)
+    {
+        lock (_lines) return string.Join(Environment.NewLine, _lines.Skip(Math.Max(0, _lines.Count - count)));
+    }
+
     public void Flush()
     {
         try

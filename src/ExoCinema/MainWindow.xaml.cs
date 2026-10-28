@@ -55,6 +55,8 @@ public sealed partial class MainWindow : Window, IPlayerSurface
             if (e.WindowActivationState == WindowActivationState.Deactivated || _controller is null) return;
             SendXamlToBack();
             try { _controller.MoveFocus(CoreWebView2MoveFocusReason.Programmatic); } catch (COMException) { }
+            // A full-screen change asked for while in the background happens now (MainWindow.Player.cs).
+            if (_pendingFullScreen is { } pending) DispatcherQueue.TryEnqueue(() => SetFullScreen(pending));
         };
         AppWindow.Changed += (_, e) =>
         {
@@ -128,8 +130,8 @@ public sealed partial class MainWindow : Window, IPlayerSurface
     private async Task StartAsync()
     {
         TryStartMpv();
+        _openCheck = CheckOnOpenAsync();
         await StartWebAsync();
-        _ = WatchForUpdatesAsync();
         _ = Task.Run(() =>
         {
             try { if (ShortcutIdentity.Stamp() is > 0 and var n) _log.Write($"shortcuts: app ID set on {n}"); }

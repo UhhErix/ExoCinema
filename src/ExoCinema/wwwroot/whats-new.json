@@ -1,5 +1,30 @@
 [
   {
+    "version": "1.2.0",
+    "items": [
+      {
+        "icon": "Play",
+        "title": "Updates when you open it",
+        "detail": "When a new version is out, Exo Cinema offers it as it opens, with one button. Nothing ever interrupts a film."
+      },
+      {
+        "icon": "Private",
+        "title": "Your add-on link, when you need it",
+        "detail": "Settings keeps a saved add-on link as dots until you click into it, and Copy copies it without showing it."
+      },
+      {
+        "icon": "Glass",
+        "title": "Reduce motion, your way",
+        "detail": "Settings > Look has its own Reduce motion switch. It starts from Windows' setting, then only your choice counts."
+      },
+      {
+        "icon": "Home",
+        "title": "Stays behind your game",
+        "detail": "Exo Cinema no longer comes to the front by itself, when it opens a sheet or leaves full screen with another window in use."
+      }
+    ]
+  },
+  {
     "version": "1.1.0",
     "items": [
       {

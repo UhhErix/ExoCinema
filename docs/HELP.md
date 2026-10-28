@@ -52,7 +52,7 @@ Everything can be changed later in Settings, from your picture at the top right.
 
 ## Settings
 
-- **Look > Material:** Glass, or Solid for plain dark panels.
+- **Look:** **Material**, Glass or Solid for plain dark panels; **Reduce motion**, which keeps things from sliding, growing or looping (only fades). It is Exo Cinema's own switch: Windows' animation effects setting doesn't change it.
 - **Playback:** Source (Best plays the best version of a title for this PC, Ask lets you pick one when your server has several) and Play next episode.
 - **Account:** your Jellyfin account page (opens in your browser) and Sign out.
 - **Storage:** the pictures kept from your server, and **Clear** to empty them.
@@ -60,7 +60,7 @@ Everything can be changed later in Settings, from your picture at the top right.
 
 ## Updates
 
-Exo Cinema checks for a new version 20 seconds after it starts and every twelve hours, and tells you once when one is out. **Settings > About > Install update** downloads it, checks it and installs it; Exo Cinema closes and opens again on the new version, signed in as before.
+When a new version is out, Exo Cinema offers it as it opens: **Update available** shows the version, and **Update now** downloads it, checks it and installs it; Exo Cinema closes and opens again on the new version, signed in as before, and What's New shows what changed. It never interrupts while it's open: a version that comes out then is offered at the next open. If an update fails, the sheet says why, with **Copy logs** for a problem report, **Try again** and **Not now**. **Settings > About > Check for updates** looks at any time.
 
 ## Uninstall
 

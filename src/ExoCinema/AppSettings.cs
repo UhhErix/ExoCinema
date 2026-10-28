@@ -4,8 +4,9 @@ using ExoCinema.Jellyfin;
 namespace ExoCinema;
 
 /// <summary>
-/// What Exo Cinema remembers about itself, in settings.json beside the sign-in: whether the first run is done and
-/// the last version whose What's New was seen. The page keeps its own preferences.
+/// What Exo Cinema remembers about itself, in settings.json beside the sign-in: whether the first run is done, the
+/// last version whose What's New was seen, and the version Update now last started installing (so an update that
+/// didn't take is offered with Not now from the start). The page keeps its own preferences.
 /// </summary>
 internal sealed class AppSettings
 {
@@ -13,6 +14,7 @@ internal sealed class AppSettings
 
     public bool Onboarded { get; set; }
     public string? WhatsNewSeen { get; set; }
+    public string? UpdateTried { get; set; }
 
     public static AppSettings Load()
     {

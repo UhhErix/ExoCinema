@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0 — October 28, 2026
+
+Updates offered as Exo Cinema opens, your add-on link back in reach, a Reduce motion switch of its own, and a window that stays behind your game.
+
+- **Updates when you open it.** Exo Cinema looks for a new version once, as it opens, and offers it on a sheet: "Update available", the version and **Update now**, which downloads it with its progress, checks it and installs it; the new version opens and What's New shows what changed. A version that comes out while Exo Cinema is open waits for the next open, so nothing interrupts a film; the twelve-hour check is gone. A failed update says why, with **Copy logs**, **Try again** and **Not now**; one that didn't take is offered with **Not now** from the start, so nobody is held in a loop. The check asks Exo's update address (`updates.getexo.app`) first and GitHub when it doesn't answer, so a renamed account can't strand an installed Exo Cinema. _Verified: a test copy marked 1.0.0 was offered 1.1.0 through updates.getexo.app and downloaded and checked its 62.9 MB Setup in about 2 seconds; the retry state, Copy logs and Not now on screen. Installing and reopening: checked in code only, as test copies never run Setup._
+- **Sheets hold the window.** While What's New or the update sheet is up, nothing behind it scrolls or reacts to keys, and a press on the dim does nothing; the window's own buttons stay usable on top. _Verified: on screen and with keys (Ctrl+K and Backspace did nothing behind it)._
+- **Your add-on link, when you need it.** Settings › Playback › Stream addon showed a saved link as dots even to you, with no way to read or copy it. It now shows in full while you're in the field and as dots otherwise (so it stays off screenshots and streams), and **Copy** copies it without showing it. _Verified: on screen._
+- **Reduce motion, your way.** Settings › Look has a Reduce motion switch, as Exo Launcher has. The first start takes it from Windows' animation effects; after that only the switch decides, and it always shows what's in effect. Windows' setting no longer quietly stills Exo Cinema with the switch Off. _Verified: with Windows' setting emulated both ways, the first start and the switch kept afterwards._
+- **Stays behind your game.** Exo Cinema came to the front by itself in two ways: a sheet focusing itself as a window opened in the background, and a change to or from full screen (an episode ending while you play) with another window in use. Focus the page moves by itself now waits for you to click into Exo Cinema, and a full-screen change waits until it's the active window. _Verified: a background start with the update sheet, and a background full-screen request, left the window in front where it was._
+- **Up to date.** libmpv is zhongfly's LGPL build of October 28 (mpv v0.41.0-1346-gdc4b285c9, FFmpeg N-128155-g8e362b7b5); every other part was already the newest. _Verified: 720p with RTX Super Resolution, and 4K60 Dolby Vision with no dropped frames, on the release build._
+
 ## 1.1.0 — October 28, 2026
 
 RTX upscaling without the ripple, an app that rests when you're not using it, pins that survive updates, and Exo Launcher's notices and motion.

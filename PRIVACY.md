@@ -2,7 +2,7 @@
 
 **Exo Cinema is local-first. It has no Exo account, no ads, no analytics and no telemetry.**
 
-Exo Cinema has no server of its own. Nothing you watch or do in it is sent to Exo or its developer.
+Exo Cinema's only Exo server is its update address, which tells it when a new version is out. Nothing you watch or do in it is sent to Exo or its developer.
 
 ## What stays on this PC
 
@@ -38,9 +38,9 @@ Exo Cinema's interface runs on Microsoft Edge WebView2, part of Windows. WebView
 
 ## Updates
 
-Twenty seconds after Exo Cinema starts, and every twelve hours while it runs, it asks GitHub which release is the newest (`github.com/UhhErix/ExoCinema/releases/latest`), and when a newer one is out, reads that release's list of changes (`whats-new.json`). **Settings > About > Check for updates** asks at once. GitHub sees your IP address and "ExoCinema/" with the version you run; nothing else is sent.
+As Exo Cinema opens, and only then, it asks Exo's update address (`updates.getexo.app`, run by Exo on Cloudflare) which release is the newest, and when a newer one is out, reads that release's list of changes (`whats-new.json`). If that address doesn't answer, it asks GitHub instead (`github.com/UhhErix/ExoCinema/releases/latest`). **Settings > About > Check for updates** asks at once. The update address and GitHub see your IP address while they answer, and "ExoCinema/" with the version you run; nothing else is sent. The update address keeps no logs and stores nothing about you.
 
-When you choose **Install update**, Exo Cinema downloads that release's Setup and its SHA-256 from GitHub (`github.com`, which hands the files over from its own download host), checks the file against that checksum and against its own version details, keeps it in `%LocalAppData%\ExoCinema\updates` and runs it. Setup installs over the version you have and keeps your data; the downloaded Setup is deleted the next time Exo Cinema starts.
+When you choose **Install update**, Exo Cinema downloads that release's Setup and its SHA-256 through the update address, which hands the files over from GitHub (`github.com` and its download host) or, if GitHub can't, from Exo's own copy of the release. It falls back to GitHub directly if the address doesn't answer. It checks the file against that checksum and against its own version details, keeps it in `%LocalAppData%\ExoCinema\updates` and runs it. Setup installs over the version you have and keeps your data; the downloaded Setup is deleted the next time Exo Cinema starts.
 
 ## Questions
 

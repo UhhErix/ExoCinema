@@ -144,7 +144,7 @@ document.addEventListener('click', (e) => {
   const arrow = e.target.closest('[data-page]')
   const row = arrow?.closest('.shelf')?.querySelector('.row')
   if (!row) return
-  row.scrollBy({ left: Number(arrow.dataset.page) * row.clientWidth * 0.9, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  row.scrollBy({ left: Number(arrow.dataset.page) * row.clientWidth * 0.9, behavior: document.documentElement.dataset.exoMotion === 'reduce' ? 'auto' : 'smooth' })
 })
 
 // ---- Rooms (the Bar)
@@ -587,6 +587,8 @@ $('profileBtn').addEventListener('click', (e) => {
 
 const PREFS = {
   material: { label: 'Material', options: [['glass', 'Glass'], ['solid', 'Solid']], fallback: 'glass' },
+  // Exo Cinema's own switch, as Exo Launcher's: it decides, Windows' animation effects don't (the user's rule).
+  motion: { label: 'Reduce motion', options: [['off', 'Off'], ['on', 'On']], fallback: 'off' },
   source: { label: 'Source', options: [['best', 'Best'], ['ask', 'Ask']], fallback: 'best' },
   autoplay: { label: 'Play next episode', options: [['on', 'On'], ['off', 'Off']], fallback: 'on' },
 }
@@ -601,6 +603,8 @@ function setPref(key, value) {
 // The picture and the decoder aren't here: the app picks them from this PC as it plays (MainWindow.Player.cs).
 function applyPrefs() {
   document.documentElement.dataset.material = pref('material')
+  if (pref('motion') === 'on') document.documentElement.dataset.exoMotion = 'reduce'
+  else delete document.documentElement.dataset.exoMotion
 }
 applyPrefs()
 try { for (const key of ['quality', 'hwdec']) localStorage.removeItem(`exo:pref:${key}`) } catch { }
@@ -620,9 +624,9 @@ async function renderSettings() {
   if (route() !== 'settings') return
   view.innerHTML = `<section class="settings-page">
     <h1>Settings</h1>
-    <div class="exo-glass is-panel set-group"><h2>Look</h2>${row('material')}</div>
+    <div class="exo-glass is-panel set-group"><h2>Look</h2>${row('material')}${row('motion')}</div>
     <div class="exo-glass is-panel set-group"><h2>Playback</h2>${row('source')}${row('autoplay')}
-      <div class="set-row"><span class="set-name">Stream addon</span><input class="exo-field is-secret" id="addonUrl" type="url" inputmode="url" style="width:280px" placeholder="Stremio manifest URL" spellcheck="false" autocapitalize="off" autocomplete="off" value="${esc(localStorage.getItem('exo:addon') ?? '')}"></div></div>
+      <div class="set-row"><span class="set-name">Stream addon</span><span class="addon-field"><input class="exo-field is-secret" id="addonUrl" type="url" inputmode="url" style="width:280px" placeholder="Stremio manifest URL" spellcheck="false" autocapitalize="off" autocomplete="off" value="${esc(localStorage.getItem('exo:addon') ?? '')}"><button type="button" class="set-btn" id="addonCopy"${localStorage.getItem('exo:addon') ? '' : ' hidden'}>Copy</button></span></div></div>
     <div class="exo-glass is-panel set-group"><h2>Account</h2>
       <div class="set-row"><span class="set-name">${esc(session.userName)}</span><span class="set-value">${esc(session.serverName)}</span></div>
       <div class="set-row"><span class="set-name">Jellyfin account</span><button type="button" class="set-btn" data-app="jellyfin-settings">Open</button></div>
@@ -635,6 +639,17 @@ async function renderSettings() {
   view.querySelector('#addonUrl')?.addEventListener('input', (e) => {
     const v = e.target.value.trim()
     v ? localStorage.setItem('exo:addon', v) : localStorage.removeItem('exo:addon')
+    view.querySelector('#addonCopy').hidden = !v
+  })
+  view.querySelector('#addonCopy')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget
+    try {
+      await navigator.clipboard.writeText(localStorage.getItem('exo:addon') ?? '')
+      b.textContent = 'Copied'
+    } catch {
+      b.textContent = 'Couldn’t copy'
+    }
+    setTimeout(() => { if (b.isConnected) b.textContent = 'Copy' }, 2000)
   })
 }
 document.addEventListener('click', (e) => { if (!e.target.closest('#settingsMenu')) closeMenu() })
@@ -783,7 +798,7 @@ function showSignIn() {
   $('signinError').hidden = true
   const last = localStorage.getItem('exo:last-server')
   if (last && !$('server').value) { $('server').value = last; probe() }
-  ;($('server').value ? $('username') : $('server')).focus()
+  focusWhenActive($('server').value ? $('username') : $('server'))
 }
 
 function signedIn(s) {
@@ -926,5 +941,6 @@ async function warmTitles() {
   try { await firstScreenReady(drawing) } catch { }
   exoBoot.reveal()
   setTimeout(warmTitles, 1200)
-  setTimeout(() => maybeWhatsNew().catch(() => { }), 600)
+  // A newer version first (it was looked for as the window opened); What's New when there's none.
+  setTimeout(async () => { if (!(await offerUpdate())) maybeWhatsNew().catch(() => { }) }, 600)
 })()

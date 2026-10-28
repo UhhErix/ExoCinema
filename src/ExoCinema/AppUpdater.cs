@@ -8,16 +8,19 @@ using System.Text.RegularExpressions;
 namespace ExoCinema;
 
 /// <summary>
-/// New versions, from this repository's releases on GitHub only. The check reads the tag the latest release
-/// redirects to (no API, no rate limit). Install downloads that release's Setup and its SHA-256, checks the file
-/// against it and against its own version details, and runs it silently: Setup closes Exo Cinema, swaps the new
-/// version in and opens it again.
+/// New versions, from Exo's update address first: it names the latest release and hands its files over from GitHub
+/// (or from its own copy when GitHub can't), so a renamed account or a moved repository never strands an installed
+/// Exo Cinema again (the ImAvgErix rename stranded Exo Launcher 3.16). When the address doesn't answer, the check
+/// reads the tag GitHub's latest release redirects to and the files come from GitHub, as before. Either way Install
+/// downloads that release's Setup and its SHA-256, checks the file against it and against its own version details,
+/// and runs it silently: Setup closes Exo Cinema, swaps the new version in and opens it again.
 /// </summary>
 internal sealed partial class AppUpdater
 {
     public const string Repo = "UhhErix/ExoCinema";
+    private const string Exo = "https://updates.getexo.app/v1/cinema";
     private const string SetupName = "ExoCinema-Setup.exe";
-    private static readonly string[] Hosts = ["github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"];
+    private static readonly string[] Hosts = ["updates.getexo.app", "github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"];
     private static readonly string Folder = Path.Combine(AppInfo.Data, "updates");
 
     private readonly HttpClient _http;
@@ -43,10 +46,8 @@ internal sealed partial class AppUpdater
 
     public async Task<string?> CheckAsync(CancellationToken ct = default)
     {
-        using var r = await _http.GetAsync($"https://github.com/{Repo}/releases/latest", HttpCompletionOption.ResponseHeadersRead, ct);
-        // No release yet answers 404, or a redirect to the release list.
-        var tag = r.Headers.Location is { } to ? TagIn().Match(to.ToString()) : Match.Empty;
-        if (!tag.Success || !System.Version.TryParse(tag.Groups[1].Value, out var latest) || latest <= System.Version.Parse(AppInfo.Version))
+        var found = await LatestFromExoAsync(ct) ?? await LatestFromGitHubAsync(ct);
+        if (found is not { } latest || latest <= System.Version.Parse(AppInfo.Version))
         {
             Latest = null;
             Notes = null;
@@ -56,24 +57,52 @@ internal sealed partial class AppUpdater
         if (version != Latest)
         {
             Notes = null;
-            try { Notes = CheckedNotes(await GetStringAsync(Asset(version, "whats-new.json"), 64 * 1024, ct), version); } catch (Exception e) when (e is HttpRequestException or InvalidDataException or TaskCanceledException) { }
+            try { Notes = CheckedNotes(await GetAssetStringAsync(version, "whats-new.json", 64 * 1024, ct), version); } catch (Exception e) when (e is HttpRequestException or InvalidDataException or TaskCanceledException) { }
         }
         Latest = version;
         return version;
+    }
+
+    // Exo's address: {"app":"cinema","tag":"vX.Y.Z",...}. Only the tag is taken from it; the files' addresses are made
+    // here. Ten seconds, then GitHub.
+    private async Task<System.Version?> LatestFromExoAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var wait = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            wait.CancelAfter(TimeSpan.FromSeconds(10));
+            var n = JsonNode.Parse(await GetStringAsync($"{Exo}/latest", 4 * 1024, wait.Token));
+            var tag = (string?)n?["tag"];
+            return (string?)n?["app"] == "cinema" && tag is not null && TagOnly().Match(tag) is { Success: true } m
+                && System.Version.TryParse(m.Groups[1].Value, out var v) ? v : null;
+        }
+        catch (Exception e) when (e is HttpRequestException or InvalidDataException or TaskCanceledException or System.Text.Json.JsonException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    // GitHub's latest release redirects to its tag (no API, no rate limit); no release yet answers 404, or a redirect
+    // to the release list.
+    private async Task<System.Version?> LatestFromGitHubAsync(CancellationToken ct)
+    {
+        using var r = await _http.GetAsync($"https://github.com/{Repo}/releases/latest", HttpCompletionOption.ResponseHeadersRead, ct);
+        var tag = r.Headers.Location is { } to ? TagIn().Match(to.ToString()) : Match.Empty;
+        return tag.Success && System.Version.TryParse(tag.Groups[1].Value, out var v) ? v : null;
     }
 
     /// <summary>Downloads and checks the latest Setup; returns its path once it is safe to run.</summary>
     public async Task<string> DownloadAsync(Action<double> progress, CancellationToken ct = default)
     {
         var version = Latest ?? throw new InvalidOperationException("No update to install.");
-        var sumText = await GetStringAsync(Asset(version, SetupName + ".sha256"), 1024, ct);
+        var sumText = await GetAssetStringAsync(version, SetupName + ".sha256", 1024, ct);
         var sum = Regex.Match(sumText, "^[0-9a-fA-F]{64}").Value;
         if (sum.Length != 64) throw new InvalidDataException("The release's checksum couldn't be read.");
 
         Directory.CreateDirectory(Folder);
         var part = Path.Combine(Folder, $"ExoCinema-Setup-{version}.exe.part");
         var exe = Path.ChangeExtension(part, null);
-        using (var r = await GetAsync(Asset(version, SetupName), ct))
+        using (var r = await GetAssetAsync(version, SetupName, ct))
         await using (var from = await r.Content.ReadAsStreamAsync(ct))
         await using (var to = File.Create(part))
         {
@@ -108,16 +137,32 @@ internal sealed partial class AppUpdater
         Process.Start(start)?.Dispose();
     }
 
-    private static string Asset(string version, string name) => $"https://github.com/{Repo}/releases/download/v{version}/{name}";
+    // A release file from Exo's address, else straight from GitHub. The checksum decides what runs, wherever it came from.
+    private static string[] AssetUrls(string version, string name) =>
+        [$"{Exo}/download/v{version}/{name}", $"https://github.com/{Repo}/releases/download/v{version}/{name}"];
 
-    // Redirects are followed by hand, and only to GitHub's own hosts.
+    private async Task<HttpResponseMessage> GetAssetAsync(string version, string name, CancellationToken ct)
+    {
+        var urls = AssetUrls(version, name);
+        try { return await GetAsync(urls[0], ct); }
+        catch (HttpRequestException) { return await GetAsync(urls[1], ct); }
+    }
+
+    private async Task<string> GetAssetStringAsync(string version, string name, int limit, CancellationToken ct)
+    {
+        var urls = AssetUrls(version, name);
+        try { return await GetStringAsync(urls[0], limit, ct); }
+        catch (HttpRequestException) { return await GetStringAsync(urls[1], limit, ct); }
+    }
+
+    // Redirects are followed by hand, and only to Exo's update address and GitHub's own hosts.
     private async Task<HttpResponseMessage> GetAsync(string url, CancellationToken ct)
     {
         var uri = new Uri(url);
         for (var hop = 0; hop < 6; hop++)
         {
             if (uri.Scheme != "https" || !Hosts.Contains(uri.Host, StringComparer.OrdinalIgnoreCase))
-                throw new HttpRequestException($"The update pointed somewhere other than GitHub ({uri.Host}).");
+                throw new HttpRequestException($"The update pointed somewhere other than Exo's update address or GitHub ({uri.Host}).");
             var r = await _http.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
             if ((int)r.StatusCode is >= 300 and < 400 && r.Headers.Location is { } next)
             {
@@ -128,7 +173,7 @@ internal sealed partial class AppUpdater
             if (!r.IsSuccessStatusCode)
             {
                 r.Dispose();
-                throw new HttpRequestException($"GitHub answered {(int)r.StatusCode}.");
+                throw new HttpRequestException($"{uri.Host} answered {(int)r.StatusCode}.");
             }
             return r;
         }
@@ -160,4 +205,7 @@ internal sealed partial class AppUpdater
 
     [GeneratedRegex(@"/releases/tag/v?(\d+\.\d+\.\d+)$")]
     private static partial Regex TagIn();
+
+    [GeneratedRegex(@"^v(\d+\.\d+\.\d+)$")]
+    private static partial Regex TagOnly();
 }

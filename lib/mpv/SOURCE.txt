@@ -1,5 +1,5 @@
-libmpv-2.dll: libmpv under LGPL-2.1-or-later (mpv built with -Dgpl=false, FFmpeg without its GPL parts), mpv git ad5877edab,
-from zhongfly/mpv-winbuild release 2026-10-28-ad5877edab, asset mpv-dev-lgpl-x86_64-20261028-git-ad5877edab.7z
-(baseline x86-64, not the AVX2-only v3 build): https://github.com/zhongfly/mpv-winbuild/releases/tag/2026-10-28-ad5877edab
-Archive SHA-256: 365855da538bf7380c8421f072bcf5c22f097302576667d9868e6db48cf4c125
-libmpv-2.dll SHA-256: 23c3499cb55da6993dc2315f595d9cb92fc83759fa733974598c0a7e7ee4bc2d
+libmpv-2.dll: libmpv under LGPL-2.1-or-later (mpv built with -Dgpl=false, FFmpeg without its GPL parts), mpv git dc4b285c93,
+from zhongfly/mpv-winbuild release 2026-10-28-dc4b285c93, asset mpv-dev-lgpl-x86_64-20261028-git-dc4b285c93.7z
+(baseline x86-64, not the AVX2-only v3 build): https://github.com/zhongfly/mpv-winbuild/releases/tag/2026-10-28-dc4b285c93
+Archive SHA-256: 2d55e5686527a0fcf38d61e8da5890c27c92e1d0df195775a8736c67e0063b6a
+libmpv-2.dll SHA-256: 4d6c6f111adb0a17de3d2cc0dc45047698422a207c621ce7014359184414fed5
