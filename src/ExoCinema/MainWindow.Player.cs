@@ -45,6 +45,7 @@ public sealed partial class MainWindow
 
     public void Play(string url, string? authHeader, double startSeconds, string? title)
     {
+        if (!TryStartMpv()) throw new JellyfinException("The player couldn't start. If your graphics driver is being updated, try again when it's done.");
         var mpv = _mpv!;
         _loadAt = mpv.Now;
         _firstFrameSeen = false;
@@ -111,6 +112,7 @@ public sealed partial class MainWindow
         {
             if (name == "pause" && value is bool paused) _jellyfin.OnPause(paused);
             _props[name] = value;
+            MediaFollow(name);
             Post(new { type = "prop", name, value });
         });
     }
@@ -143,7 +145,11 @@ public sealed partial class MainWindow
         if (name == "video-reconfig") ApplyPicture();
         OnUi(() =>
         {
-            if (name == "playback-restart") _jellyfin.OnPlaybackRestart();
+            if (name == "playback-restart")
+            {
+                _jellyfin.OnPlaybackRestart();
+                MediaFollow("seek");
+            }
             if (name == "end-file") _jellyfin.OnEnded();
             if (name == "file-loaded")
                 foreach (var (url, title, lang) in _jellyfin.TakePendingSubtitles())

@@ -15,18 +15,26 @@ window.addEventListener('exo:now-playing', async (e) => {
   hideUpNext()
   $('skipBtn').hidden = true
   const id = plus.item.Id
+  send({ cmd: 'media', title: plus.item.Name ?? '', subtitle: mediaLine(plus.item), image: poster(plus.item, 300) })
   try {
     const s = await jf('segments', { id })
     if (plus.item?.Id === id && s?.length) plus.segments = s.map((x) => ({ type: x.Type, start: x.StartTicks / 1e7, end: x.EndTicks / 1e7 }))
   } catch { }
   try {
     const n = await jf('next', { id })
-    if (plus.item?.Id === id) plus.next = n
+    if (plus.item?.Id === id) { plus.next = n; send({ cmd: 'media', next: !!n }) }
   } catch { }
 })
 
+// Windows' media controls and Exo Launcher's Now Playing (MainWindow.Media.cs) show the title, this line under it
+// and the poster; their Next button plays the next episode.
+const mediaLine = (item) => item.Type === 'Episode'
+  ? [item.SeriesName, item.ParentIndexNumber != null && item.IndexNumber != null ? `S${item.ParentIndexNumber}:E${item.IndexNumber}` : ''].filter(Boolean).join(' · ')
+  : String(item.ProductionYear ?? '')
+
 onHost((m) => {
-  if (m.type === 'event' && m.name === 'file-loaded') {
+  if (m.type === 'media-key' && m.key === 'next') playNext()
+  else if (m.type === 'event' && m.name === 'file-loaded') {
     plus.applyLanguages = true
     send({ cmd: 'tracks' })
     send({ cmd: 'chapters' })

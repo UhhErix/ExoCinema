@@ -13,6 +13,7 @@ Exo Cinema keeps its data in `%LocalAppData%\ExoCinema`, beside the app (in `app
 - the interface's own storage (`WebView2`): your choices in Settings, the volume, the languages you picked for each show, the last server you signed in to, and a copy of Home and the title pages you opened, so they draw at once next time;
 - pictures from your server (`cache\images`), so Home draws before the server answers. **Settings > Storage > Clear** empties it;
 - `app.log`, `crash.log` and `window-placement.json`: what Exo Cinema did (timings, buffering, errors), what went wrong if it crashed, and where its window was. `app.log` never holds a web address, a key or your server's or add-on's name: each address is cut to its kind of file (`https://…/*.mkv`), so the log is safe to attach to an issue.
+- While the player is open, the title, the show and the poster of what's playing go to Windows' media controls on this PC, which show them in Windows' media flyouts and to apps that read them, such as Exo Launcher. They don't leave the PC; closing the player clears them.
 - WebView2's form memory is off: nothing you type into Exo Cinema (a server address, an add-on link) is kept by it.
 
 Signing out forgets the sign-in. Uninstalling with **Also remove my sign-in and settings** deletes the whole folder; without it, the folder stays for a reinstall.

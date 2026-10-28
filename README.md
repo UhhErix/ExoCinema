@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/UhhErix/ExoCinema/releases/latest/download/ExoCinema-Setup.exe"><strong>Download for Windows 11</strong></a>
-  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.7">What's new in 1.0.7</a>
+  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.8">What's new in 1.0.8</a>
   · <a href="CHANGELOG.md">Changelog</a>
   · <a href="PRIVACY.md">Privacy</a>
   · <a href="SECURITY.md">Security</a>
@@ -17,11 +17,11 @@
 
 | File | Version | SHA-256 |
 | --- | --- | --- |
-| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.0.7/ExoCinema-Setup.exe) | 1.0.7 | `fe83c9db5e4cc0a19bc2ddcbb58f8263de274e2d19fc1b57be44f9f0536f78ed` |
+| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.0.8/ExoCinema-Setup.exe) | 1.0.8 | `d718c8cd382c610ff7132b3dbb9163461546e794ab9d94b1a6da77f2c3214467` |
 
 **Requirements:** Windows 11 x64 with WebView2 (built into Windows 11; Setup installs it if it's missing), and a Jellyfin server to sign in to. Installs for your Windows user only, in `%LOCALAPPDATA%\ExoCinema\app`, with no administrator rights.
 
-**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.7):
+**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.0.8):
 
 ```powershell
 Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256

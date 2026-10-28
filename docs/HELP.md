@@ -42,6 +42,7 @@ Everything can be changed later in Settings, from your picture at the top right.
 | I | What's playing and how (picture, decoder, video, frame rate) |
 | Esc | Leave full screen, or go back |
 
+- **Media keys:** while the player is open, your keyboard's play, pause and next keys work even with another window in front, and Windows' media controls (and Exo Launcher's Now Playing) show what's playing. Closing the player gives the keys back to your music.
 - **Audio, subtitles and speed:** the sliders button at the top right. Each show remembers the languages you pick for its next episodes.
 - **Skip intro** and **Skip credits** show while an opening or credits play, when your server has them marked (Jellyfin's media segments) or the file names them in its chapters.
 - **Up Next** shows near the end of an episode. With **Play next episode** on, the next one plays when the count runs out; **Not now** stops it.

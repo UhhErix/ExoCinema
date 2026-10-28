@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.8 — October 28, 2026
+
+Exo Cinema joins Windows' media controls.
+
+- **Media keys and Windows' media controls.** While the player is open, Exo Cinema is a media session in Windows: the keyboard's play, pause and next keys work with another window in front, and Windows' media controls show the title, the show and episode (or the year) and the poster, with play and pause, a timeline to seek on, 10 seconds back and forward, and Next when a next episode follows. Closing the player ends the session, so the media keys go back to your music. _Verified: end-to-end through Windows' media-session API; pause, play, seek and Next each reached the player, an episode showed its show, number and poster, and closing the player ended the session._
+- **In Exo Launcher's Now Playing.** Exo Launcher reads Windows' media sessions, so it can show and steer Exo Cinema like its other sources (app ID `UhhErix.ExoCinema`). _Checked in code only; needs a matching Exo Launcher._
+- **Its own name and icon.** Exo Cinema stamps its app ID on its own Start menu and desktop shortcuts, so Windows names it "Exo Cinema" with its icon in the media controls, and a pinned taskbar icon stays one icon. _Verified: end-to-end on a test shortcut with the release build; other shortcuts are left alone._
+- **Opens during a driver update.** While a graphics driver installs, its Vulkan loader is gone for a minute or two and mpv can't load; Exo Cinema opened to an empty window then. Now it opens as usual, and the player starts the next time it's needed (or Play says to try again once the driver is done). _Verified: found during an NVIDIA driver install, when the release build couldn't load mpv; checked in code only since, as the install had finished._
+
 ## 1.0.7 — October 28, 2026
 
 Everything Exo Cinema is built on is on its newest version.

@@ -263,6 +263,7 @@ function leavePlayer() {
   $('spinner').hidden = true
   document.body.classList.replace('mode-player', 'mode-app')
   sendGlass()
+  send({ cmd: 'media', off: true })
 }
 
 // Volume: the slider sets mpv's volume as it moves; the wheel over it steps by 5; the level is kept for next time.

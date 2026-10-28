@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.0.8",
+    "items": [
+      {
+        "icon": "Play",
+        "title": "Media keys and Windows' media controls",
+        "detail": "Your keyboard's play, pause and next keys work even when Exo Cinema isn't in front, and Windows' media controls show what's playing, with its poster."
+      },
+      {
+        "icon": "Home",
+        "title": "In Exo Launcher's Now Playing",
+        "detail": "Exo Launcher can show and steer what Exo Cinema plays. When you close the player, the media keys go back to your music."
+      }
+    ]
+  },
+  {
     "version": "1.0.7",
     "items": [
       {

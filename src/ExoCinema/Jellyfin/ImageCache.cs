@@ -64,7 +64,7 @@ internal sealed class ImageCache
         }
     }
 
-    private Task<byte[]?> GetAsync(string url)
+    internal Task<byte[]?> GetAsync(string url)
     {
         var path = Path.Combine(Dir, Key(url));
         if (File.Exists(path))

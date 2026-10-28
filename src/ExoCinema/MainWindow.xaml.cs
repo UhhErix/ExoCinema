@@ -107,11 +107,36 @@ public sealed partial class MainWindow : Window, IPlayerSurface
 
     private async Task StartAsync()
     {
-        StartMpv();
+        TryStartMpv();
         await StartWebAsync();
         _ = WatchForUpdatesAsync();
+        _ = Task.Run(() =>
+        {
+            try { if (ShortcutIdentity.Stamp() is > 0 and var n) _log.Write($"shortcuts: app ID set on {n}"); }
+            catch (Exception e) { _log.Write($"shortcuts: {e.Message}"); }
+        });
         if (_launch.FullScreen) SetFullScreen(true);
-        if (_launch.Media is { } media) Play(media, null, 0, null);
+        if (_launch.Media is { } media && TryStartMpv()) Play(media, null, 0, null);
+    }
+
+    // mpv can't load while the graphics driver is being installed (its Vulkan loader is gone for a minute or two):
+    // the app opens anyway, and the player starts the next time something needs it.
+    private bool TryStartMpv()
+    {
+        if (_mpv != null) return true;
+        try
+        {
+            StartMpv();
+            QueueGlass();
+            return true;
+        }
+        catch (Exception e)
+        {
+            _mpv?.Dispose();
+            _mpv = null;
+            _log.Write($"player: can't start yet: {e.Message}");
+            return false;
+        }
     }
 
     private void StartMpv()
@@ -169,6 +194,7 @@ public sealed partial class MainWindow : Window, IPlayerSurface
     private void OnWebMessage(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs e)
     {
         var msg = JsonNode.Parse(e.WebMessageAsJson)!;
+        if ((string?)msg["cmd"] is "toggle-pause" or "seek" or "set" or "command" or "load" or "tracks" or "chapters" or "get" && !TryStartMpv()) return;
         var mpv = _mpv!;
         switch ((string?)msg["cmd"])
         {
@@ -209,6 +235,9 @@ public sealed partial class MainWindow : Window, IPlayerSurface
                 break;
             case "glass":
                 SetGlass(msg);
+                break;
+            case "media":
+                SetMedia(msg);
                 break;
             case "chrome":
                 SetChromeLayout(Rects(msg["regions"]), Rect(msg["maximize"]));
@@ -308,6 +337,7 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         Task.Run(_jellyfin.ShutdownAsync).Wait(1500);
         _closingWindow = true;
         _performance?.Dispose();
+        if (_media != null) _media.IsEnabled = false;
         SaveWindowPlacement();
         _mpv?.Dispose();
         _mpv = null;
