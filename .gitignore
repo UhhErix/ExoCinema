@@ -9,3 +9,5 @@ out/
 artifacts/
 setup/build/
 setup/out/
+# make-discord.py's check sheet, for looking at by eye only.
+tools/discord-check.png

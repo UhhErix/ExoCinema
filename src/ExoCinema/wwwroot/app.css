@@ -636,6 +636,22 @@ img { display: block; }
 
 .palette-field svg { width: 18px; height: 18px; color: var(--color-muted); }
 
+/* Searching: a small spinner at the field's end. */
+.palette-field::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  flex: none;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid rgb(var(--exo-ink-rgb) / 0.2);
+  border-top-color: var(--color-fg);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.palette.is-searching .palette-field::after { opacity: 1; animation: spin 800ms linear infinite; }
+
 .palette-field input {
   flex: 1;
   min-width: 0;
@@ -684,6 +700,11 @@ img { display: block; }
 .palette-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .palette-name { font-size: var(--type-control); font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .palette-sub { font-size: var(--type-small); color: var(--color-muted); }
+.palette-note { margin: 0; padding: 12px 10px; color: var(--color-muted); font-size: var(--type-control); }
+.palette-note.is-bad { color: var(--color-bad); }
+
+/* What's New takes the focus itself, so no button wears the keyboard ring before anything is pressed. */
+.whats-new-sheet:focus { outline: none; }
 
 /* ── Sign-in: a sheet over Exo's black ────────────────────────────────────────────────────────────────────────── */
 

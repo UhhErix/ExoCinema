@@ -574,15 +574,26 @@ function openPalette() {
   $('paletteInput').value = ''
   $('paletteResults').innerHTML = ''
   paletteItems = []
+  searching(false)
   requestAnimationFrame(() => $('paletteInput').focus())
 }
 
 function closePalette() {
   $('palette').hidden = true
   $('paletteInput').blur()
+  paletteAsk++
+  searching(false)
 }
 
-function drawPalette() {
+// While the server looks, the field's own spinner turns; what was found stays until new results replace it.
+const searching = (on) => $('palette').classList.toggle('is-searching', on)
+
+// The results, or when there are none, what happened: no matches, or why the search failed.
+function drawPalette(note = '', bad = false) {
+  if (!paletteItems.length && note) {
+    $('paletteResults').innerHTML = `<p class="palette-note${bad ? ' is-bad' : ''}">${esc(note)}</p>`
+    return
+  }
   $('paletteResults').innerHTML = paletteItems.map((i, n) => {
     const src = poster(i, 80)
     const kind = i.Type === 'Episode' ? `${i.SeriesName} · ${episodeCode(i)}` : i.Type === 'Series' ? 'Show' : 'Movie'
@@ -611,16 +622,24 @@ $('paletteInput').addEventListener('input', () => {
   clearTimeout(searchTimer)
   const term = $('paletteInput').value.trim()
   const ask = ++paletteAsk
-  if (!term) { paletteItems = []; drawPalette(); return }
+  if (!term) { paletteItems = []; drawPalette(); searching(false); return }
+  searching(true)
+  // A beat after the last key, so a word typed quickly asks the server once.
   searchTimer = setTimeout(async () => {
     try {
       const r = await jf('search', { term })
       if (ask !== paletteAsk) return
-      paletteItems = (r.Items ?? []).slice(0, 12)
+      paletteItems = (r?.Items ?? []).slice(0, 12)
       paletteIndex = 0
-      drawPalette()
-    } catch { }
-  }, 160)
+      drawPalette('No matches')
+    } catch (err) {
+      if (ask !== paletteAsk) return
+      paletteItems = []
+      drawPalette(err.message, true)
+    } finally {
+      if (ask === paletteAsk) searching(false)
+    }
+  }, 250)
 })
 $('paletteInput').addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closePalette() }

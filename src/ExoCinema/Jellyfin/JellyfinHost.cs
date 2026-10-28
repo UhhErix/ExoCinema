@@ -94,7 +94,7 @@ internal sealed class JellyfinHost(IPlayerSurface player)
             "item" => await client.ItemAsync((string)args!["id"]!),
             "seasons" => await client.SeasonsAsync((string)args!["seriesId"]!),
             "episodes" => await client.EpisodesAsync((string)args!["seriesId"]!, (string)args["seasonId"]!),
-            "search" => await client.SearchAsync((string)args!["term"]!, 40),
+            "search" => await SearchAsync(client, (string)args!["term"]!),
             "played" => await SetPlayedAsync(client, (string)args!["id"]!, (bool)args["played"]!),
             "play" => await PlayAsync(client, (string)args!["id"]!, (bool?)args["resume"] ?? true, (string?)args["addon"]),
             "stop" => await StopAsync(),
@@ -338,6 +338,18 @@ internal sealed class JellyfinHost(IPlayerSurface player)
         if ((string?)item["Type"] != "Episode" || (string?)item["SeriesId"] is not { } series) return null;
         var list = (await c.EpisodesFromAsync(series, id, 2))["Items"] as JsonArray;
         return list is { Count: > 1 } ? list[1]!.DeepClone() : null;
+    }
+
+    private CancellationTokenSource? _searching;
+
+    // Only the latest search is worth the server's time: one typed past is called off (the page drops its answer).
+    private async Task<JsonNode?> SearchAsync(JellyfinClient c, string term)
+    {
+        using var mine = new CancellationTokenSource();
+        Interlocked.Exchange(ref _searching, mine)?.Cancel();
+        try { return await c.SearchAsync(term, 20, mine.Token); }
+        catch (OperationCanceledException) when (mine.IsCancellationRequested) { return null; }
+        finally { Interlocked.CompareExchange(ref _searching, null, mine); }
     }
 
     private async Task<JsonNode?> StopAsync()

@@ -124,9 +124,14 @@ internal sealed class JellyfinClient
         return GetWithFallbackAsync($"/Items?userId={UserId}&{q}", $"/Users/{UserId}/Items?{q}", ct);
     }
 
+    /// <summary>
+    /// Titles matching what is typed, with only what the search list draws: on a large library the full fields
+    /// (each show's episode counts among them) and the count of every match took the server 3 to 13 seconds.
+    /// </summary>
     public Task<JsonNode> SearchAsync(string term, int limit, CancellationToken ct = default)
     {
-        var q = $"searchTerm={Uri.EscapeDataString(term)}&limit={limit}&recursive=true&includeItemTypes=Movie,Series,Episode&fields={Fields}";
+        var q = $"searchTerm={Uri.EscapeDataString(term)}&limit={limit}&recursive=true&includeItemTypes=Movie,Series,Episode"
+            + "&enableTotalRecordCount=false&enableUserData=false&enableImageTypes=Primary&imageTypeLimit=1";
         return GetWithFallbackAsync($"/Items?userId={UserId}&{q}", $"/Users/{UserId}/Items?{q}", ct);
     }
 

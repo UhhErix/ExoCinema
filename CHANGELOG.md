@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 — October 27, 2026
+
+Search that answers and says it's looking.
+
+- **Search answers sooner.** Each search asked the server for every detail a title's page uses, the episode counts of every show among them, and for a count of every match; on a server with a 10,000-title library that took up to 13 seconds. It now asks only for what the list shows: about a second for a common word, a third of a second once the server has seen it. A word the server hasn't searched lately can still take it several seconds on a library that size. _Verified: against a real server with a 10,000-title library, 12.9 s to 1.3 s cold and 0.36 s warm; posters and years still show._
+- **Search shows it's looking.** A spinner turns in the field while the server looks, a search you've typed past is called off so the server works only on the latest, and the list says No matches, or why the search failed, instead of staying empty. _Verified: end-to-end._
+- **No ring on What's New.** It opened with Continue focused, and with nothing pressed yet the page drew its white keyboard ring around the button; the sheet takes the focus now, and Enter or Escape still continue. _Verified: on screen._
+
 ## 1.0.0 — October 27, 2026
 
 The first release: your Jellyfin library in Exo's look, with a native player.

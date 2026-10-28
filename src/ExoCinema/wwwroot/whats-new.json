@@ -1,14 +1,62 @@
 [
   {
+    "version": "1.0.1",
+    "items": [
+      {
+        "icon": "Search",
+        "title": "Search answers sooner",
+        "detail": "Search asks your server only for what its list shows, so a large library answers in about a second instead of up to thirteen."
+      },
+      {
+        "icon": "Search",
+        "title": "Search shows it is looking",
+        "detail": "A spinner turns in the field while your server looks, and No matches or the reason shows when nothing comes back."
+      },
+      {
+        "icon": "Glass",
+        "title": "No ring on What's New",
+        "detail": "What's New no longer opens with a white ring around Continue."
+      }
+    ]
+  },
+  {
     "version": "1.0.0",
     "items": [
-      { "icon": "Library", "title": "Your Jellyfin library", "detail": "Sign in to your server and everything you watch is here: Home, your libraries, shows by season, and search with Ctrl+K." },
-      { "icon": "Sync", "title": "Progress that follows you", "detail": "Where you stop and what you've watched go back to Jellyfin as you watch, so every Jellyfin app picks up where you left off." },
-      { "icon": "Play", "title": "A native player", "detail": "mpv draws the picture with hardware decoding, HDR and Dolby Vision tone mapping, at the video's own frame rate." },
-      { "icon": "Glass", "title": "Liquid Glass over the picture", "detail": "The controls blur the video under them as it plays, drawn on the graphics card at no cost to playback." },
-      { "icon": "Tracks", "title": "Audio, subtitles and speed", "detail": "One menu at the top right; each show remembers the languages you pick." },
-      { "icon": "Skip", "title": "Skip intro and Up Next", "detail": "Skip openings and credits, and the next episode plays on its own unless you say not now." },
-      { "icon": "Home", "title": "A Home that opens at once", "detail": "Rows and pictures are kept on this PC, so Home draws before your server answers." }
+      {
+        "icon": "Library",
+        "title": "Your Jellyfin library",
+        "detail": "Sign in to your server and everything you watch is here: Home, your libraries, shows by season, and search with Ctrl+K."
+      },
+      {
+        "icon": "Sync",
+        "title": "Progress that follows you",
+        "detail": "Where you stop and what you've watched go back to Jellyfin as you watch, so every Jellyfin app picks up where you left off."
+      },
+      {
+        "icon": "Play",
+        "title": "A native player",
+        "detail": "mpv draws the picture with hardware decoding, HDR and Dolby Vision tone mapping, at the video's own frame rate."
+      },
+      {
+        "icon": "Glass",
+        "title": "Liquid Glass over the picture",
+        "detail": "The controls blur the video under them as it plays, drawn on the graphics card at no cost to playback."
+      },
+      {
+        "icon": "Tracks",
+        "title": "Audio, subtitles and speed",
+        "detail": "One menu at the top right; each show remembers the languages you pick."
+      },
+      {
+        "icon": "Skip",
+        "title": "Skip intro and Up Next",
+        "detail": "Skip openings and credits, and the next episode plays on its own unless you say not now."
+      },
+      {
+        "icon": "Home",
+        "title": "A Home that opens at once",
+        "detail": "Rows and pictures are kept on this PC, so Home draws before your server answers."
+      }
     ]
   }
 ]

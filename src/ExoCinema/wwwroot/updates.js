@@ -64,7 +64,8 @@ function openWhatsNew(title, releases, install = false) {
   $('whatsNewContinue').classList.toggle('is-primary', !install)
   $('whatsNewContinue').classList.toggle('secondary', install)
   $('whatsNew').hidden = false
-  $('whatsNewContinue').focus()
+  // The sheet takes the focus, not Continue: a button focused before anything is pressed wears the keyboard ring.
+  document.querySelector('.whats-new-sheet').focus()
 }
 
 function closeWhatsNew() { $('whatsNew').hidden = true }
@@ -73,7 +74,15 @@ $('whatsNew').addEventListener('click', (e) => {
   if (e.target.closest('[data-close-whats-new], #whatsNewContinue')) closeWhatsNew()
   else if (e.target.closest('#whatsNewInstall')) { closeWhatsNew(); installUpdate() }
 })
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('whatsNew').hidden) { e.stopPropagation(); closeWhatsNew() } }, true)
+document.addEventListener('keydown', (e) => {
+  if ($('whatsNew').hidden) return
+  // Escape, or Enter on the sheet itself, is Continue.
+  if (e.key === 'Escape' || (e.key === 'Enter' && document.activeElement?.classList.contains('whats-new-sheet'))) {
+    e.preventDefault()
+    e.stopPropagation()
+    closeWhatsNew()
+  }
+}, true)
 
 // ── Settings › About ────────────────────────────────────────────────────────────────────────────────────────────
 
