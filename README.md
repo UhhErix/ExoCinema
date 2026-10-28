@@ -105,6 +105,11 @@ Every bundled library, font and tool is listed in [Third-party notices](THIRD_PA
 
 **Not affiliated.** Exo Cinema is independent and not affiliated with or endorsed by the Jellyfin project, the mpv or FFmpeg projects, Microsoft, or any service it works with. Their names and logos belong to their owners. The video in the pictures above is Jellyfin's test footage ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)), and the server and user in them are made up.
 
+## Also from Exo
+
+- **[Exo Launcher](https://github.com/UhhErix/ExoLauncher)** — every game store, Discord, music, captures and mouse in one app
+- **[Exo Browser](https://github.com/UhhErix/ExoBrowser)** — private browser with Exo Shield and Exo Vault built in
+
 ---
 
 [Help](docs/HELP.md) · [Report an issue](https://github.com/UhhErix/ExoCinema/issues) · [Support development](https://www.buymeacoffee.com/UhhErix)
