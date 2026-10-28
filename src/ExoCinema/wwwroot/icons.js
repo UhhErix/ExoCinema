@@ -60,3 +60,9 @@ document.addEventListener('pointerdown', (event) => {
 // pause, the arrows to seek), wore Chromium's ring though nobody was tabbing. Tab turns them on; the pointer, off.
 document.addEventListener('keydown', (event) => { if (event.key === 'Tab') document.documentElement.classList.add('is-tabbing') }, true)
 document.addEventListener('pointerdown', () => document.documentElement.classList.remove('is-tabbing'), true)
+
+// In the background (another window focused, or minimized) the page's loops pause (app.css › data-exo-inactive).
+const markInactive = () => { document.documentElement.dataset.exoInactive = String(document.hidden || !document.hasFocus()) }
+for (const type of ['focus', 'blur']) window.addEventListener(type, markInactive)
+document.addEventListener('visibilitychange', markInactive)
+markInactive()

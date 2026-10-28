@@ -33,10 +33,13 @@
   !define ROOT "${EXO_TEST_ROOT}"
   !define LINK_NAME "Exo Cinema (test)"
   !define REG_NAME "ExoCinemaTest"
+  !define APP_ID "UhhErix.ExoCinema.Test"
 !else
   !define ROOT "$LOCALAPPDATA\ExoCinema"
   !define LINK_NAME "Exo Cinema"
   !define REG_NAME "ExoCinema"
+  ; The app ID Exo Cinema runs under (Program.cs › AppUserModelId), on its shortcuts from the start.
+  !define APP_ID "UhhErix.ExoCinema"
 !endif
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${REG_NAME}.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${REG_NAME}"
@@ -138,6 +141,55 @@ FunctionEnd
 !macroend
 !insertmacro CloseApp ""
 !insertmacro CloseApp "un."
+
+; A shortcut gets Exo Cinema's app ID (System.AppUserModel.ID) as it is made. Windows keys a Start or taskbar pin to
+; that ID: a plain shortcut gets one Windows works out from it, and when the app later stamped its own ID on it (as
+; 1.0.8 did) the ID changed and Windows dropped the pin. Written here on every install, it never changes.
+; Stack: the shortcut's path. IShellLinkW, then IPersistFile (Load 5, Save 6) and IPropertyStore (SetValue 6, Commit 7).
+Function SetLinkAppId
+  Exch $0
+  Push $1
+  Push $2
+  Push $3
+  Push $4
+  Push $5
+  Push $6
+  Push $9
+  System::Call 'ole32::CoCreateInstance(g "{00021401-0000-0000-C000-000000000046}", p 0, i 1, g "{000214F9-0000-0000-C000-000000000046}", *p .r1) i .r9'
+  ${If} $9 = 0
+    System::Call '$1->0(g "{0000010B-0000-0000-C000-000000000046}", *p .r2) i .r9'
+    ${If} $9 = 0
+      System::Call '$2->5(w r0, i 2) i .r9'
+      ${If} $9 = 0
+        System::Call '$1->0(g "{886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99}", *p .r3) i .r9'
+        ${If} $9 = 0
+          System::Call '*(g "{9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}", i 5) p .r4'
+          System::Call '*(&w${NSIS_MAX_STRLEN} "${APP_ID}") p .r5'
+          System::Call '*(&i2 31, &i2 0, &i2 0, &i2 0, p r5, p 0) p .r6'
+          System::Call '$3->6(p r4, p r6) i .r9'
+          ${If} $9 = 0
+            System::Call '$3->7() i .r9'
+            System::Call '$2->6(p 0, i 1) i .r9'
+          ${EndIf}
+          System::Free $6
+          System::Free $5
+          System::Free $4
+          System::Call '$3->2()'
+        ${EndIf}
+      ${EndIf}
+      System::Call '$2->2()'
+    ${EndIf}
+    System::Call '$1->2()'
+  ${EndIf}
+  Pop $9
+  Pop $6
+  Pop $5
+  Pop $4
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
+FunctionEnd
 
 ; Exo Cinema runs on WebView2, part of Windows 11 and of most Windows 10 PCs. Where it's missing (or registered with
 ; its files gone), Microsoft's own installer is fetched and run, after checking it is signed by Microsoft.
@@ -352,8 +404,12 @@ Section "Exo Cinema" SecApp
   SetOutPath "$INSTDIR"
   CreateDirectory "$SMPROGRAMS"
   CreateShortCut "$SMPROGRAMS\${LINK_NAME}.lnk" "$INSTDIR\ExoCinema.exe" "" "$INSTDIR\ExoCinema.exe" 0
+  Push "$SMPROGRAMS\${LINK_NAME}.lnk"
+  Call SetLinkAppId
   ${If} $DesktopLink == "1"
     CreateShortCut "$DESKTOP\${LINK_NAME}.lnk" "$INSTDIR\ExoCinema.exe" "" "$INSTDIR\ExoCinema.exe" 0
+    Push "$DESKTOP\${LINK_NAME}.lnk"
+    Call SetLinkAppId
   ${ElseIf} $DesktopLink == "0"
     Delete "$DESKTOP\${LINK_NAME}.lnk"
   ${EndIf}

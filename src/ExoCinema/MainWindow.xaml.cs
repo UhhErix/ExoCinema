@@ -60,9 +60,29 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         {
             if (_controller is not null && (e.DidPresenterChange || e.DidSizeChange || e.DidVisibilityChange)) SendXamlToBack();
             if (e.DidPresenterChange || e.DidSizeChange) NotifyWindowState();
+            if (e.DidPresenterChange || e.DidSizeChange || e.DidVisibilityChange) FollowWindowVisibility();
             if (e.DidPositionChange || e.DidSizeChange) RememberWindowPlacement();
         };
         AppWindow.Closing += OnClosing;
+    }
+
+    // Minimized, the page has nothing to show: WebView2 stops drawing (the page sees document.hidden, so its loops
+    // stop) and gives back the memory it can rebuild, until the window is back. mpv plays on regardless, and the page
+    // catches up from the host's next posts.
+    private bool _webAway;
+
+    private void FollowWindowVisibility()
+    {
+        if (_controller is null || _core is null) return;
+        var away = !AppWindow.IsVisible || AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized };
+        if (away == _webAway) return;
+        _webAway = away;
+        try
+        {
+            _controller.IsVisible = !away;
+            _core.MemoryUsageTargetLevel = away ? CoreWebView2MemoryUsageTargetLevel.Low : CoreWebView2MemoryUsageTargetLevel.Normal;
+        }
+        catch (COMException) { }
     }
 
     /// <summary>Shows the window; with EXO_CINEMA_NO_ACTIVATE=1 it does so without taking the focus.</summary>
@@ -337,6 +357,7 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         Task.Run(_jellyfin.ShutdownAsync).Wait(1500);
         _closingWindow = true;
         _performance?.Dispose();
+        _upscaleRecheck?.Dispose();
         if (_media != null) _media.IsEnabled = false;
         SaveWindowPlacement();
         _mpv?.Dispose();

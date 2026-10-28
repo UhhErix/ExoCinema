@@ -3,12 +3,6 @@
    behind it, then holds still while Exo Cinema loads. Transform and opacity only, on its own layer, so the compositor
    runs it at the screen's rate however busy the page is behind it; it grows to its rest size, never past it. */
 
-:root {
-  --ease-spring: linear(0, 0.005 1.8%, 0.018 3.7%, 0.04 5.7%, 0.074 8%, 0.111 10.2%, 0.156 12.5%, 0.437 25.8%,
-    0.512 29.7%, 0.576 33.2%, 0.645 37.3%, 0.703 41.3%, 0.756 45.5%, 0.803 49.8%, 0.846 54.5%, 0.883 59.5%,
-    0.913 64.7%, 0.939 70.3%, 0.958 76%, 0.973 82%, 0.986 90.2%, 0.995 99.8%, 1);
-}
-
 .exo-boot {
   position: fixed;
   inset: 0;
@@ -31,7 +25,7 @@
 
 .exo-boot.is-playing::before {
   opacity: 1;
-  animation: exo-boot-fade 900ms var(--ease-out) 120ms both;
+  animation: exo-boot-fade var(--dur-flight) var(--ease-out) var(--dur-quick) both;
 }
 
 .exo-boot-icon {
@@ -45,7 +39,7 @@
 
 .exo-boot.is-playing .exo-boot-icon {
   opacity: 1;
-  animation: exo-boot-fade 360ms var(--ease-out) both, exo-boot-settle 640ms var(--ease-spring) both;
+  animation: exo-boot-fade var(--dur-base) var(--ease-out) both, exo-boot-settle var(--dur-flight) var(--ease-spring) both;
 }
 
 @keyframes exo-boot-fade {

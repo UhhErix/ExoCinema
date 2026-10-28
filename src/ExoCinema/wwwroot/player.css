@@ -67,7 +67,7 @@ body.mode-player #stage { display: block; }
   display: grid;
   place-items: center;
   border-radius: 999px;
-  transition: scale var(--dur-press) var(--ease-out), background var(--dur-fade) var(--ease-out);
+  transition: scale var(--dur-press) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
 
 .icon:hover { background: var(--exo-selected); }
@@ -96,7 +96,7 @@ body.mode-player #stage { display: block; }
   border-radius: 999px;
   background: var(--color-fg);
   color: var(--color-primary-fg);
-  transition: scale var(--dur-press) var(--ease-out), background var(--dur-fade) var(--ease-out);
+  transition: scale var(--dur-press) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
 
 .play:hover { background: var(--exo-primary-hover); }
@@ -145,7 +145,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 50%;
   background: var(--color-fg);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
-  transition: opacity 120ms var(--ease-out);
+  transition: opacity var(--dur-quick) var(--ease-out);
 }
 
 input[type="range"].is-compact {
@@ -181,19 +181,27 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
   border-radius: 999px;
   background: var(--exo-track);
   overflow: hidden;
-  transition: height var(--dur-morph) var(--ease-out);
+  transition: height var(--dur-move) var(--ease-out);
 }
 
 .scrub:hover .track, .scrub.is-dragging .track { height: 6px; }
 
+/* The bars and the thumb move on transforms (player.js › draw), so playing never lays the page out again. */
 .cached, .played {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 0;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left;
 }
 
 .cached { background: rgb(var(--exo-ink-rgb) / 0.22); }
 .played { background: var(--color-fg); }
+
+.thumb-rail {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
 
 .thumb {
   position: absolute;
@@ -205,7 +213,7 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
   border-radius: 50%;
   background: var(--color-fg);
   scale: 0;
-  transition: scale var(--dur-morph) var(--ease-out);
+  transition: scale var(--dur-move) var(--ease-out);
 }
 
 .scrub:hover .thumb, .scrub.is-dragging .thumb { scale: 1; }
@@ -220,14 +228,14 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
   font-variant-numeric: tabular-nums;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--dur-fade) var(--ease-out);
+  transition: opacity var(--dur-base) var(--ease-out);
 }
 
 .scrub:hover .hover-time { opacity: 1; }
 
 /* Chrome leaves while the picture plays and the pointer rests. */
 :is(.top, .controls) {
-  transition: opacity 320ms var(--ease-out), translate 320ms var(--ease-out);
+  transition: opacity var(--dur-flight) var(--ease-out), translate var(--dur-flight) var(--ease-out);
 }
 
 #stage.is-idle .top { opacity: 0; translate: 0 -8px; pointer-events: none; }
@@ -244,7 +252,7 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
   font-size: 12px;
   line-height: 1.7;
   font-variant-numeric: tabular-nums;
-  transition: opacity 320ms var(--ease-out);
+  transition: opacity var(--dur-flight) var(--ease-out);
 }
 
 .readings dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0 16px; }
@@ -294,7 +302,7 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
   border-radius: 999px;
   font-size: 16px;
   font-weight: 600;
-  animation: menu-in var(--dur-base) var(--ease-out);
+  animation: sheet-in var(--dur-base) var(--ease-out);
   transition: scale var(--dur-quick) var(--ease-out);
 }
 
@@ -312,7 +320,7 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
   width: 440px;
   padding: 10px;
   border-radius: 18px;
-  animation: menu-in var(--dur-move) var(--ease-out);
+  animation: sheet-in var(--dur-move) var(--ease-out);
 }
 
 .up-art {

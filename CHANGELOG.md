@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 — October 28, 2026
+
+RTX upscaling without the ripple, an app that rests when you're not using it, pins that survive updates, and Exo Launcher's notices and motion.
+
+- **RTX upscaling without the ripple.** RTX Video Super Resolution was sized from the screen's height, not the window's: in a maximized window (shorter than the screen) or for a widescreen film (1920x800 on a 1080p screen went up to 2592x1080), mpv then shrank the upscaled picture back by a sliver, and that made the whole video ripple and look wavy. It now upscales to exactly the size the video is shown at, so mpv doesn't scale it again, and sizes itself again when the window is resized or goes full screen. _Verified: a 720p clip in a 1904x1072 window came out of the upscaler at exactly 1904x1072, and re-fitted to 1584x890 after a resize to 1584x892._
+- **Next to nothing in the background.** The player's progress bar redrew on every frame forever, even with no video open: about 6% of a CPU core at idle, minimized or behind a game. It now draws only while it's on screen and moving, and moves on transforms instead of relaying the page out; the Skip and Up Next check runs only while a video is open; a minimized Exo Cinema stops drawing its page and gives memory back; and its spinners pause while another window is in front. _Verified, on this PC (the app plus its WebView2 processes): idle on Home 5.7% of a core to 0.5%; idle after use 5.9% to 0.05%; minimized 6.2% to 0.08%, using 237 MB instead of 577 MB; playing 720p with RTX upscaling 40.6% to 18.4%. The page's memory stayed flat over three rounds of every page and the player._
+- **Pins that stay.** Windows ties a Start or taskbar pin to an app's ID. 1.0.8 put Exo Cinema's own ID on its shortcuts, which changed it and unpinned Exo Cinema; Setup now writes that ID on the shortcuts as it makes them, so it never changes again. If 1.0.8 unpinned it, pin it once more and it stays. _Verified: a test install and a test update over it both kept the shortcut's ID._
+- **Notices like Exo Launcher's.** Messages show at the top right under the bar, stack, stay 4.5 seconds and wait while the pointer is on them. _Verified: on screen._
+- **Motion like Exo Launcher's.** Every time and curve now comes from Exo Launcher's tokens: the boot, fades and the progress fill were snapped to them; menus grow from their button and sheets settle in; the light a press makes on glass is drawn once and only fades and grows (it repainted the glass on every frame of a press); and under Windows' reduce motion nothing loops. _Checked in code; the press light on screen._
+- **Up to date.** The Windows SDK build tools are on 10.0.28000.2957; .NET 10.0.14, libmpv (mpv v0.41.0-1320) and every other package were already the newest. _Checked in code only._
+
 ## 1.0.8 — October 28, 2026
 
 Exo Cinema joins Windows' media controls.

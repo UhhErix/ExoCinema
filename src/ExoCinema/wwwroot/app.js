@@ -746,14 +746,32 @@ $('paletteInput').addEventListener('keydown', (e) => {
   } else if (e.key === 'Enter') { e.preventDefault(); pickPalette(paletteIndex) }
 })
 
+// A notice, as Exo Launcher's: each stays 4.5 s from when it shows, none goes while the pointer is on them, and coming
+// off them gives each its full time again.
+const NOTICE_STAY_MS = 4500
+const notices = Object.assign(document.createElement('section'), { className: 'notices' })
+notices.setAttribute('aria-label', 'Notifications')
+document.body.append(notices)
+let noticesHeld = false
+notices.addEventListener('pointerenter', () => { noticesHeld = true; for (const n of notices.children) clearTimeout(n.leaveTimer) })
+notices.addEventListener('pointerleave', () => { noticesHeld = false; for (const n of notices.children) armNotice(n) })
+
+function armNotice(n) {
+  clearTimeout(n.leaveTimer)
+  n.leaveTimer = setTimeout(() => {
+    if (noticesHeld) return
+    n.classList.add('is-leaving')
+    setTimeout(() => n.remove(), 220)
+  }, NOTICE_STAY_MS)
+}
+
 function toast(message) {
-  const t = document.createElement('div')
-  t.className = 'toast exo-glass is-panel'
-  t.setAttribute('role', 'status')
-  t.textContent = message
-  document.body.append(t)
-  setTimeout(() => t.classList.add('is-leaving'), 4000)
-  setTimeout(() => t.remove(), 4400)
+  const n = document.createElement('div')
+  n.className = 'notice exo-glass is-panel'
+  n.setAttribute('role', 'status')
+  n.textContent = message
+  notices.append(n)
+  armNotice(n)
 }
 
 // ---- Sign-in

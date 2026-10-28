@@ -4,12 +4,6 @@
    Over video mpv draws the blur itself, under the glass shapes (player.js, Shaders/exo-glass.glsl), since it draws
    under the page where backdrop-filter can't see. */
 
-@property --glass-glow {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-
 :root {
   color-scheme: dark;
   --color-bg: #000000;
@@ -49,11 +43,6 @@
   --exo-rim-pressed: inset 0 0 0 1px rgb(255 255 255 / 0.08), var(--glassy-rim);
   --exo-glass-rim: var(--glassy-ring), var(--glassy-rim);
 
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --dur-press: 120ms;
-  --dur-fade: 160ms;
-  --dur-morph: 220ms;
 }
 
 /* No scrollbar in Exo: everything scrolls by wheel, trackpad, keys and touch. Contrast themes keep Windows' own. */
@@ -115,7 +104,9 @@ button.exo-glass:hover {
   --exo-fill: transparent;
 }
 
-/* Light from within: a press lights the glass where it lands and spreads as it lets go. */
+/* Light from within: a press lights the glass where it lands (icons.js places it) and the light spreads and fades as
+   the press lets go. As Exo Launcher's: drawn once at its full size, it grows from a third of it around the press on
+   opacity and scale alone, so the compositor runs it (a growing gradient repainted the glass every frame). */
 .exo-glass::after {
   content: "";
   position: absolute;
@@ -123,9 +114,11 @@ button.exo-glass:hover {
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(circle calc(24px + var(--glass-glow) * 56px) at var(--glass-x, 50%) var(--glass-y, 50%),
-      rgb(var(--exo-ink-rgb) / calc(var(--glass-glow) * 0.16)), transparent);
-  transition: --glass-glow 420ms var(--ease-out);
+  background: radial-gradient(circle 80px at var(--glass-x, 50%) var(--glass-y, 50%), rgb(var(--exo-ink-rgb) / 0.16), transparent);
+  opacity: 0;
+  scale: 0.3;
+  transform-origin: var(--glass-x, 50%) var(--glass-y, 50%);
+  transition: opacity var(--dur-flight) var(--ease-out), scale var(--dur-flight) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -134,8 +127,11 @@ button.exo-glass:hover {
   }
 }
 
-.exo-glass:active { --glass-glow: 1; }
-.exo-glass:active::after { transition-duration: 90ms; }
+.exo-glass:active::after {
+  opacity: 1;
+  scale: 1;
+  transition-duration: var(--dur-press);
+}
 
 .exo-glass:focus-visible,
 .exo-glass :focus-visible {

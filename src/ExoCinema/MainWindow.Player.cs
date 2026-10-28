@@ -97,6 +97,8 @@ public sealed partial class MainWindow
         if (name == "osd-dimensions")
         {
             QueueGlass();
+            // The window changed size (or went full screen): the upscaler is sized again once it has settled.
+            (_upscaleRecheck ??= new Timer(_ => ApplyPicture())).Change(400, Timeout.Infinite);
             return;
         }
         if (name == "paused-for-cache") LogBuffering(value is true);
@@ -166,6 +168,8 @@ public sealed partial class MainWindow
     // scalers, so then nothing changes.
     private bool _upscaleOffNoted;
     private string _upscaleFilter = "";
+    private Timer? _upscaleRecheck;
+    private double _upscaleScale;
 
     // The picture, chosen for this PC instead of in Settings: High quality (mpv's high-quality scalers, and the AI
     // upscaling above) on a dedicated graphics card on mains power; Balanced on integrated graphics (mpv's own scalers),
@@ -209,10 +213,20 @@ public sealed partial class MainWindow
             if (_pictureHigh && height > 0 && PlayerTuning.Vendor == "nvidia" && PlayerTuning.Gpu.Contains("RTX", StringComparison.OrdinalIgnoreCase)
                 && mpv.Get("hwdec-current") == "d3d11va" && mpv.Get("video-params/gamma") is not ("pq" or "hlg") && !GameRunning())
             {
-                scale = Math.Min(4, Math.Max(Num(mpv.Get("display-height")), Num(mpv.Get("osd-height"))) / height);
+                // Exactly to the size the picture is shown at, so mpv doesn't scale it again: sized from the screen's
+                // height, a maximized window (shorter than the screen) or a widescreen film (1920x800 on a 1080p screen
+                // went up to 2592x1080) had mpv shrink the upscaled picture back a little, and shrinking a sharpened
+                // picture by a sliver ripples across it: the video looked wavy. Fit to the window's video area
+                // (osd-dimensions less its bars); the filter is rebuilt only when that size really changes.
+                double V(string name) => Num(mpv.Get(name));
+                var (dw, dh) = (V("video-params/dw"), V("video-params/dh"));
+                var shownW = V("osd-dimensions/w") - V("osd-dimensions/ml") - V("osd-dimensions/mr");
+                var shownH = V("osd-dimensions/h") - V("osd-dimensions/mt") - V("osd-dimensions/mb");
+                scale = dw > 0 && dh > 0 && shownW > 0 && shownH > 0 ? Math.Round(Math.Min(4, Math.Min(shownW / dw, shownH / dh)), 4) : 0;
+                if (_upscaleScale > 0 && Math.Abs(scale - _upscaleScale) * Math.Max(dw, dh) < 2) scale = _upscaleScale;
                 var setting = scale >= 1.2 ? NvidiaVideo.SuperResolutionSetting() : null;
                 if (setting > 0)
-                    want = $"@exo-upscale:d3d11vpp=scaling-mode=nvidia:scale={scale.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}";
+                    want = $"@exo-upscale:d3d11vpp=scaling-mode=nvidia:scale={scale.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)}";
                 else if (scale >= 1.2 && !_upscaleOffNoted)
                 {
                     // Said once: the picture would gain from it, but the driver's switch is off (or can't be read).
@@ -224,7 +238,8 @@ public sealed partial class MainWindow
             if (_upscaleFilter.Length > 0) mpv.Command("vf", "remove", "@exo-upscale");
             if (want.Length > 0 && mpv.Command("vf", "add", want) < 0) want = "";
             _upscaleFilter = want;
-            _log.Write(want.Length > 0 ? $"upscaling: RTX Video Super Resolution, {height:0}p x{scale:0.##}" : "upscaling: off");
+            _upscaleScale = want.Length > 0 ? scale : 0;
+            _log.Write(want.Length > 0 ? $"upscaling: RTX Video Super Resolution, {height:0}p x{scale:0.##} in a {Num(mpv.Get("osd-dimensions/w")):0}x{Num(mpv.Get("osd-dimensions/h")):0} window" : "upscaling: off");
         }
         catch (Exception e) { _log.Write($"upscaling: {e.Message}"); }
     }

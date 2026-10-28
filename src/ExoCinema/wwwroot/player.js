@@ -56,20 +56,26 @@ function drawSpinner() {
   spinnerTimer = setTimeout(() => { if (state.waiting) $('spinner').hidden = false }, 250)
 }
 
+// The bar glides frame by frame only while it can be seen and something moves it: playing, dragging or a seek on its
+// way. Outside the player, with the controls gone, paused or minimized, nothing runs; a host post or the controls
+// coming back draw it again.
+let drawFrame = 0
 function draw() {
-  if (inPlayer()) {
-    const t = state.dragging ? state.dragTime : currentTime()
-    const d = state.duration
-    const p = d > 0 ? Math.min(1, t / d) : 0
-    $('played').style.width = `${p * 100}%`
-    $('thumb').style.left = `${p * 100}%`
-    $('cached').style.width = `${d > 0 ? Math.min(1, state.cache / d) * 100 : 0}%`
-    $('pos').textContent = fmt(t)
-    $('dur').textContent = fmt(d)
-  }
-  requestAnimationFrame(draw)
+  drawFrame = 0
+  if (!inPlayer() || document.hidden || stage.classList.contains('is-idle')) return
+  const t = state.dragging ? state.dragTime : currentTime()
+  const d = state.duration
+  const p = d > 0 ? Math.min(1, t / d) : 0
+  $('played').style.transform = `scaleX(${p})`
+  $('thumbRail').style.translate = `${p * 100}% 0`
+  $('cached').style.transform = `scaleX(${d > 0 ? Math.min(1, state.cache / d) : 0})`
+  const pos = fmt(t), dur = fmt(d)
+  if ($('pos').textContent !== pos) $('pos').textContent = pos
+  if ($('dur').textContent !== dur) $('dur').textContent = dur
+  if (!state.pause || state.dragging || state.seekTarget != null) drawFrame = requestAnimationFrame(draw)
 }
-requestAnimationFrame(draw)
+const redraw = () => { if (!drawFrame) drawFrame = requestAnimationFrame(draw) }
+document.addEventListener('visibilitychange', redraw)
 
 function setPause(paused) {
   state.pause = paused
@@ -173,6 +179,7 @@ window.chrome.webview.addEventListener('message', ({ data: msg }) => {
       break
     case 'prop': {
       state.props[msg.name] = msg.value
+      redraw()
       switch (msg.name) {
         case 'pause':
           // Held exactly where it stopped, not where the glide had got to.
@@ -252,6 +259,7 @@ function enterPlayer(playMethod) {
   enteredAt = performance.now()
   wake()
   placeGlass()
+  redraw()
 }
 
 function leavePlayer() {
@@ -348,6 +356,7 @@ function seekTo(seconds, mode = 'absolute+exact') {
   state.time = to
   state.timeAt = performance.now()
   send({ cmd: 'seek', to, mode })
+  redraw()
 }
 
 // Relative seeks go as absolute ones from where the bar is, so presses in a row add up from what is shown.
@@ -356,11 +365,14 @@ function seekBy(seconds) {
   wake()
 }
 
+// The bar's place is read once as the pointer arrives or presses, not on every move.
 const scrub = $('scrub')
+let scrubRect = null
 const ratioAt = (x) => {
-  const r = scrub.getBoundingClientRect()
+  const r = scrubRect ??= scrub.getBoundingClientRect()
   return Math.max(0, Math.min(1, (x - r.left) / r.width))
 }
+scrub.addEventListener('pointerenter', () => { scrubRect = null })
 
 scrub.addEventListener('pointermove', (e) => {
   const tip = $('hoverTime')
@@ -371,10 +383,12 @@ scrub.addEventListener('pointermove', (e) => {
   placeGlass(100)
 })
 scrub.addEventListener('pointerdown', (e) => {
+  scrubRect = null
   scrub.setPointerCapture(e.pointerId)
   state.dragging = true
   state.dragTime = ratioAt(e.clientX) * state.duration
   scrub.classList.add('is-dragging')
+  redraw()
 })
 scrub.addEventListener('pointerup', (e) => {
   if (!state.dragging) return
@@ -409,7 +423,7 @@ document.addEventListener('keydown', (e) => {
 // Idle: after 2.5 s without the pointer moving, while playing, the chrome and the cursor leave.
 let idleTimer = 0
 function wake() {
-  if (stage.classList.contains('is-idle')) { stage.classList.remove('is-idle'); placeGlass() }
+  if (stage.classList.contains('is-idle')) { stage.classList.remove('is-idle'); placeGlass(); redraw() }
   clearTimeout(idleTimer)
   idleTimer = setTimeout(() => {
     if (!state.pause && !state.dragging && inPlayer()) {

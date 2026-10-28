@@ -130,7 +130,12 @@ document.addEventListener('pointerdown', (e) => {
 
 let skipTarget = null
 
-setInterval(() => {
+// Four times a second while a video is open, never outside the player.
+let skipWatch = 0
+window.addEventListener('exo:now-playing', () => { if (!skipWatch) skipWatch = setInterval(watchSkips, 250) })
+window.addEventListener('exo:player-closed', () => { clearInterval(skipWatch); skipWatch = 0 })
+
+function watchSkips() {
   if (!inPlayer() || state.loading) return
   const t = currentTime()
   const d = state.duration
@@ -143,7 +148,7 @@ setInterval(() => {
   const btn = $('skipBtn')
   if (skip) { skipTarget = skip[1]; btn.querySelector('span').textContent = skip[0] }
   if (btn.hidden === !!skip) { btn.hidden = !skip; placeGlass() }
-}, 250)
+}
 
 $('skipBtn').addEventListener('click', () => { if (skipTarget != null) seekTo(skipTarget) })
 

@@ -1,5 +1,30 @@
 [
   {
+    "version": "1.1.0",
+    "items": [
+      {
+        "icon": "Glass",
+        "title": "RTX upscaling without the ripple",
+        "detail": "RTX Video Super Resolution now upscales to exactly the size the video is shown at, so the picture no longer looks wavy or distorted."
+      },
+      {
+        "icon": "Home",
+        "title": "Next to nothing in the background",
+        "detail": "Idle or behind a game, Exo Cinema now uses almost no CPU, and much less memory while minimized. It uses half the CPU while playing, too."
+      },
+      {
+        "icon": "Play",
+        "title": "Pins that stay",
+        "detail": "Updates keep Exo Cinema pinned to Start and the taskbar. If 1.0.8 unpinned it, pin it once more and it stays."
+      },
+      {
+        "icon": "Private",
+        "title": "Notices like Exo Launcher's",
+        "detail": "Messages show at the top right, stack, and wait while you point at them. Motion and timings match Exo Launcher's."
+      }
+    ]
+  },
+  {
     "version": "1.0.8",
     "items": [
       {
