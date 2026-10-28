@@ -121,6 +121,7 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         foreach (var (name, format) in ObservedProperties) _mpv.Observe(name, format);
         _mpv.PropertyChanged += OnProperty;
         _mpv.EventRaised += OnMpvEvent;
+        WatchPerformance();
         _log.Mark("mpv", _mpv.Now);
     }
 
@@ -295,6 +296,7 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         // Tell the server where playback stopped before mpv goes (a short wait, so closing stays quick).
         Task.Run(_jellyfin.ShutdownAsync).Wait(1500);
         _closingWindow = true;
+        _performance?.Dispose();
         SaveWindowPlacement();
         _mpv?.Dispose();
         _mpv = null;

@@ -1,5 +1,35 @@
 [
   {
+    "version": "1.0.2",
+    "items": [
+      {
+        "icon": "Skip",
+        "title": "Skip where you look",
+        "detail": "Skip intro and Up Next sit at the right of the screen, larger and higher, clear of the controls."
+      },
+      {
+        "icon": "Home",
+        "title": "Rows that page",
+        "detail": "Arrows beside each row's name move it a page at a time, as in Exo Launcher's Store."
+      },
+      {
+        "icon": "Library",
+        "title": "Pictures that lift",
+        "detail": "Point at a poster or an episode and it rises a little toward you, as in Exo Launcher."
+      },
+      {
+        "icon": "Glass",
+        "title": "No white boxes",
+        "detail": "Focus rings show only when you move with Tab, never after a click, and the search field has none."
+      },
+      {
+        "icon": "Play",
+        "title": "Play starts playing",
+        "detail": "A second click on Play no longer lands on the picture and pauses the video as it opens."
+      }
+    ]
+  },
+  {
     "version": "1.0.1",
     "items": [
       {

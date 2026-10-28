@@ -77,6 +77,11 @@ a { color: inherit; text-decoration: none; cursor: pointer; }
 :focus { outline: none; }
 :focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
 
+/* Rings are for moving with Tab only (icons.js sets is-tabbing): with the mouse, nothing wears one, inside glass,
+   on a field or on a card's picture. */
+:root:not(.is-tabbing) :focus-visible,
+:root:not(.is-tabbing) :focus-visible * { outline: none !important; }
+
 svg { display: block; width: 16px; height: 16px; flex: none; }
 
 img { display: block; }
@@ -365,17 +370,34 @@ img { display: block; }
 
 .shelf { margin-top: 26px; }
 
+/* The shelf's name, and at its end the arrows that page it, as Exo Launcher's Store rows (store.css). */
+.shelf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 var(--exo-gutter) 8px;
+}
+
 .shelf h2 {
-  margin: 0 var(--exo-gutter) 12px;
+  margin: 0;
   font-size: var(--type-title);
   font-weight: 600;
 }
 
+.shelf-arrows { display: inline-flex; gap: 4px; flex: none; }
+.shelf-arrows .set-btn { width: 32px; padding: 0; display: grid; place-items: center; }
+.shelf-arrows svg { width: 14px; height: 14px; }
+
+/* A row that fits whole has nothing to page: no arrows, rather than two dead ones. */
+.shelf-arrows:not(:has(button:enabled)) { visibility: hidden; }
+
+/* A row scrolls sideways and so clips: 8px above holds a card's lift. */
 .row {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding: 4px var(--exo-gutter) 6px;
+  padding: 8px var(--exo-gutter) 6px;
   scroll-padding: 0 var(--exo-gutter);
   scroll-snap-type: x proximity;
 }
@@ -414,6 +436,21 @@ img { display: block; }
 }
 
 @keyframes img-in { from { opacity: 0; } }
+
+/* Hover, as Exo Launcher's covers (its home.css and store.css): the art lifts 3px toward you and takes a little
+   light of its own. It never grows (a growing layer draws soft until it stops) and gets no ring; the light is the
+   art's own brightness, so its blacks stay black. */
+.art { transition: transform var(--dur-move) var(--ease-out); }
+.art img { transition: filter var(--dur-quick) var(--ease-out); }
+
+@media (hover: hover) and (pointer: fine) {
+  :is(.card, .episode):hover .art { transform: translateY(-3px); }
+  :is(.card, .episode):hover .art img { filter: brightness(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.card, .episode):hover .art { transform: none; }
+}
 
 .card:focus-visible, .episode:focus-visible { outline: none; }
 :is(.card, .episode):focus-visible .art { outline: 2px solid var(--color-fg); outline-offset: 2px; }
@@ -662,6 +699,8 @@ img { display: block; }
   font-size: 16px;
 }
 
+/* Glass rings whatever is focused inside it (glass.css); the field is the panel's head and never rings. */
+.palette-field input:focus-visible { outline: none; }
 .palette-field input::placeholder { color: var(--color-muted); }
 .palette-field input::-webkit-search-cancel-button { display: none; }
 
@@ -704,7 +743,7 @@ img { display: block; }
 .palette-note.is-bad { color: var(--color-bad); }
 
 /* What's New takes the focus itself, so no button wears the keyboard ring before anything is pressed. */
-.whats-new-sheet:focus { outline: none; }
+.whats-new-sheet:is(:focus, :focus-visible) { outline: none; }
 
 /* ── Sign-in: a sheet over Exo's black ────────────────────────────────────────────────────────────────────────── */
 

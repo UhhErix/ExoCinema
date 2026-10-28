@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2 — October 27, 2026
+
+Skip where you look, rows that page, and no white boxes.
+
+- **Skip where you look.** Skip intro, Skip credits and Up Next sat at the right end of the control bar, near the middle of a wide screen; they sit at the right of the screen now, higher and clear of the controls, and Skip is larger (56 px, 16 px words, up from 44 and 13). _Verified: on screen._
+- **Rows that page.** Every row has Exo Launcher's Store arrows beside its name: each moves the row nine tenths of its width, one turns off at its end, and a row that fits shows none. _Verified: end-to-end._
+- **Pictures that lift.** Pointing at a poster, a wide card or an episode lifts its picture 3 px toward you and lights it a little, as Exo Launcher's covers do; nothing grows, and Windows' reduce motion keeps it still. Rows have room above for the lift. _Verified: end-to-end._
+- **No white boxes.** Glass ringed whatever had the focus inside it, so the search field wore a white box as you typed, and a field clicked into, or a button clicked and then a key pressed (Space to pause), wore Chromium's ring. Rings now show only while you move with Tab, and a click puts them away. _Verified: with the page focused, the field, a choice and search by button and by Ctrl+K show none; after Tab the ring shows._
+- **Play starts playing.** The player opens on the first click of Play or Resume, so a second click, or a double click, landed on the picture and paused the video (or went full screen) before it began. The picture takes no clicks while a video opens. _Verified: end-to-end._
+- **How playback went, in the log.** While a video plays, `app.log` gets a line a minute with the frames dropped and late in that minute, the decoder, the size, the format and the frame rate. _Verified: end-to-end._
+
 ## 1.0.1 — October 27, 2026
 
 Search that answers and says it's looking.

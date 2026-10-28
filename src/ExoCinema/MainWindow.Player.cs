@@ -150,6 +150,30 @@ public sealed partial class MainWindow
         });
     }
 
+    // While a video plays, a line a minute in app.log: the frames dropped and late in that minute, and how the video
+    // plays, so "is it smooth?" has an answer after the fact.
+    private Timer? _performance;
+    private long _drops, _late;
+
+    private void WatchPerformance() => _performance ??= new Timer(_ => LogPerformance(), null, 60_000, 60_000);
+
+    private void LogPerformance()
+    {
+        if (_mpv is not { } mpv || _closingWindow) return;
+        try
+        {
+            long N(string name) => long.TryParse(mpv.Get(name), out var v) ? v : 0;
+            long drops = N("frame-drop-count"), late = N("vo-delayed-frame-count");
+            if (drops < _drops || late < _late) (_drops, _late) = (0, 0); // a new file counts from zero
+            var (newDrops, newLate) = (drops - _drops, late - _late);
+            (_drops, _late) = (drops, late);
+            if (mpv.Get("pause") != "no" || mpv.Get("idle-active") == "yes") return;
+            var fps = double.TryParse(mpv.Get("container-fps"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var f) ? f : 0;
+            _log.Write($"playing: {newDrops} dropped, {newLate} late in the last minute · {mpv.Get("hwdec-current")} · {mpv.Get("video-params/w")}x{mpv.Get("video-params/h")} {mpv.Get("video-format")} {mpv.Get("video-params/gamma")} · {fps:0.###} fps");
+        }
+        catch (Exception e) { _log.Write($"playing: {e.Message}"); }
+    }
+
     // Each wait for the network goes in app.log with how fast data came and how fast the video needs it, so a
     // stream that buffers says whether the link or the server is short.
     private double _bufferingSince = -1;

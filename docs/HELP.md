@@ -24,6 +24,7 @@ Everything can be changed later in Settings, from your picture at the top right.
 ## The library
 
 - **Home:** Continue Watching, Next Up and what's new in each library. It draws at once from what Exo Cinema kept last time, then fills in from your server.
+- **Rows** page with the arrows beside their names.
 - **Your libraries** are in the Bar. A show's page lists its seasons and episodes; **Watched** marks a title on your server, **From the start** plays it from the beginning.
 - **Search:** Ctrl+K (or /) searches your whole server as you type. Arrows pick a result, Enter opens it.
 - **Back:** Backspace or your mouse's back button.

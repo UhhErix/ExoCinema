@@ -244,6 +244,7 @@ function enterPlayer(playMethod) {
   state.loading = true
   for (const k of ['eof-reached', 'seeking', 'paused-for-cache', 'core-idle']) state.props[k] = false
   document.body.classList.replace('mode-app', 'mode-player')
+  enteredAt = performance.now()
   wake()
   placeGlass()
 }
@@ -319,14 +320,19 @@ const actions = {
   },
 }
 
+// The player opens on the first click of Play: a second click, or a double click, landed on the picture and paused the
+// video before it began. The picture takes no clicks while a video opens, nor for a moment after the player shows.
+let enteredAt = 0
+const pictureListens = () => !state.loading && performance.now() - enteredAt > 700
+
 stage.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-action]')
   if (btn) { actions[btn.dataset.action](); return }
   // A click on the picture itself plays or pauses; a double click goes full screen.
-  if (e.target === stage) actions.pause()
+  if (e.target === stage && pictureListens()) actions.pause()
 })
 stage.addEventListener('dblclick', (e) => {
-  if (e.target === stage) actions.fullscreen()
+  if (e.target === stage && pictureListens()) actions.fullscreen()
 })
 
 // Exact by default: a keyframe seek lands up to a few seconds before its target, and the bar jumped back to it.

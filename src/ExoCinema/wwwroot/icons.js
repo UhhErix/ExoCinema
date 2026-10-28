@@ -7,6 +7,7 @@ const GLYPHS = {
   'volume': [0, 'M15 8a5 5 0 0 1 0 8m2.7-11a9 9 0 0 1 0 14M6 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2l3.5-4.5A.8.8 0 0 1 11 5v14a.8.8 0 0 1-1.5.5z'],
   'volume-off': [0, 'M15 8a5 5 0 0 1 1.912 4.934m-1.377 2.602A5 5 0 0 1 15 16m2.7-11a9 9 0 0 1 2.362 11.086m-1.676 2.299A9 9 0 0 1 17.7 19M9.069 5.054L9.5 4.5A.8.8 0 0 1 11 5v2m0 4v8a.8.8 0 0 1-1.5.5L6 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2l1.294-1.664M3 3l18 18'],
   'chevron-left': [0, 'm15 6l-6 6l6 6'],
+  'chevron-right': [0, 'm9 6l6 6l-6 6'],
   'info': [0, 'M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0m9-3h.01M11 12h1v4h1'],
   'check': [0, 'M5 12l5 5L20 7'],
   'minus': [0, 'M5 12h14'],
@@ -53,3 +54,8 @@ document.addEventListener('pointerdown', (event) => {
   glass.style.setProperty('--glass-x', `${event.clientX - box.left}px`)
   glass.style.setProperty('--glass-y', `${event.clientY - box.top}px`)
 }, { capture: true, passive: true })
+
+// Focus rings only for moving with Tab: a field clicked into, or a button clicked and then a key pressed (Space to
+// pause, the arrows to seek), wore Chromium's ring though nobody was tabbing. Tab turns them on; the pointer, off.
+document.addEventListener('keydown', (event) => { if (event.key === 'Tab') document.documentElement.classList.add('is-tabbing') }, true)
+document.addEventListener('pointerdown', () => document.documentElement.classList.remove('is-tabbing'), true)

@@ -280,31 +280,32 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
 .speed-row { display: flex; gap: 2px; padding: 4px 6px 6px; flex-wrap: wrap; }
 .speed-row .seg { padding: 0 10px; }
 
-/* Skip intro / Skip credits: a glass capsule over the picture, bottom right; it stays when the controls rest. */
+/* Skip intro / Skip credits: a large glass capsule at the screen's right, well above the controls, where the big
+   streaming apps put it; it stays when the controls rest. Up Next takes the same place. */
 .skip-btn {
   position: absolute;
-  right: max(var(--exo-gap), calc(50% - 480px));
-  bottom: 92px;
+  right: max(24px, 3vw);
+  bottom: max(128px, 14vh);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 18px 0 20px;
+  gap: 10px;
+  height: 56px;
+  padding: 0 26px 0 30px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   animation: menu-in var(--dur-base) var(--ease-out);
   transition: scale var(--dur-quick) var(--ease-out);
 }
 
-.skip-btn svg { width: 14px; height: 14px; }
+.skip-btn svg { width: 18px; height: 18px; }
 .skip-btn:active { scale: 0.97; }
 
 /* Up Next: the next episode's picture and name, Play next counting down when autoplay is on. */
 .up-next {
   position: absolute;
-  right: max(var(--exo-gap), calc(50% - 480px));
-  bottom: 92px;
+  right: max(24px, 3vw);
+  bottom: max(128px, 14vh);
   display: flex;
   align-items: center;
   gap: 14px;

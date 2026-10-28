@@ -119,7 +119,33 @@ function posterCard(item) {
 
 const placeholders = (n) => '<span class="card poster is-placeholder" aria-hidden="true"><span class="art"></span><span class="card-title">&nbsp;</span><span class="card-sub"></span></span>'.repeat(n)
 
-const shelf = (title, cards) => cards ? `<section class="shelf"><h2>${esc(title)}</h2><div class="row">${cards}</div></section>` : ''
+// A shelf, as Exo Launcher's Store rows: its name, and arrows that page the row; they hide when the row fits.
+const shelf = (title, cards) => cards ? `<section class="shelf">
+  <div class="shelf-head"><h2>${esc(title)}</h2><span class="shelf-arrows">
+    <button type="button" class="set-btn" data-page="-1" aria-label="Back in ${esc(title)}" disabled>${icon('chevron-left')}</button>
+    <button type="button" class="set-btn" data-page="1" aria-label="More ${esc(title)}">${icon('chevron-right')}</button></span></div>
+  <div class="row">${cards}</div></section>` : ''
+
+// An arrow is off at its end of the row; they change only when an edge is reached or left.
+function drawArrows(row) {
+  const head = row.previousElementSibling
+  if (!head?.classList.contains('shelf-head')) return
+  const [back, more] = head.querySelectorAll('[data-page]')
+  back.disabled = row.scrollLeft < 4
+  more.disabled = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4
+}
+const drawAllArrows = () => document.querySelectorAll('#view .row').forEach(drawArrows)
+document.addEventListener('scroll', (e) => { if (e.target.classList?.contains('row')) drawArrows(e.target) }, true)
+new MutationObserver(() => requestAnimationFrame(drawAllArrows)).observe(view, { childList: true, subtree: true })
+addEventListener('resize', drawAllArrows)
+
+// A page at a time: nine tenths of the row, so the last card seen stays in sight.
+document.addEventListener('click', (e) => {
+  const arrow = e.target.closest('[data-page]')
+  const row = arrow?.closest('.shelf')?.querySelector('.row')
+  if (!row) return
+  row.scrollBy({ left: Number(arrow.dataset.page) * row.clientWidth * 0.9, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+})
 
 // ---- Rooms (the Bar)
 
