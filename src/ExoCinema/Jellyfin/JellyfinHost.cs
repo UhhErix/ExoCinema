@@ -96,7 +96,8 @@ internal sealed class JellyfinHost(IPlayerSurface player)
             "episodes" => await client.EpisodesAsync((string)args!["seriesId"]!, (string)args["seasonId"]!),
             "search" => await SearchAsync(client, (string)args!["term"]!),
             "played" => await SetPlayedAsync(client, (string)args!["id"]!, (bool)args["played"]!),
-            "play" => await PlayAsync(client, (string)args!["id"]!, (bool?)args["resume"] ?? true, (string?)args["addon"]),
+            "play" => await PlayAsync(client, (string)args!["id"]!, (bool?)args["resume"] ?? true, (string?)args["addon"], (string?)args["source"]),
+            "sources" => await SourcesAsync(client, (string)args!["id"]!),
             "stop" => await StopAsync(),
             "segments" => await SegmentsAsync(client, (string)args!["id"]!),
             "next" => await NextEpisodeAsync(client, (string)args!["id"]!),
@@ -203,7 +204,7 @@ internal sealed class JellyfinHost(IPlayerSurface player)
 
     private int _playGeneration;
 
-    private async Task<JsonNode?> PlayAsync(JellyfinClient c, string id, bool resume, string? addonUrl)
+    private async Task<JsonNode?> PlayAsync(JellyfinClient c, string id, bool resume, string? addonUrl, string? sourceId)
     {
         // Stop (Back) during the lookups below cancels this play: it must not start behind the library.
         var generation = ++_playGeneration;
@@ -211,7 +212,10 @@ internal sealed class JellyfinHost(IPlayerSurface player)
         var item = await c.ItemAsync(id);
         var startTicks = resume ? (long?)item["UserData"]?["PlaybackPositionTicks"] ?? 0 : 0;
         var info = await c.PlaybackInfoAsync(id, startTicks);
-        var source = (info["MediaSources"] as JsonArray)?.FirstOrDefault() ?? throw new JellyfinException("The server has no file for this item.");
+        // The version picked in the source sheet, or the best one for this PC.
+        var sources = (info["MediaSources"] as JsonArray ?? []).OfType<JsonNode>().ToList();
+        var source = sources.FirstOrDefault(s => sourceId != null && (string?)s["Id"] == sourceId) ?? Ranked(sources).FirstOrDefault()
+            ?? throw new JellyfinException("The server has no file for this item.");
         var direct = (bool?)source["SupportsDirectPlay"] == true || (bool?)source["SupportsDirectStream"] == true;
         var url = direct ? c.StreamUrl(id, source) : c.Server + (string)source["TranscodingUrl"]!;
         if (direct && (bool?)source["IsRemote"] == true && (string?)source["Protocol"] == "Http")
@@ -338,6 +342,49 @@ internal sealed class JellyfinHost(IPlayerSurface player)
         if ((string?)item["Type"] != "Episode" || (string?)item["SeriesId"] is not { } series) return null;
         var list = (await c.EpisodesFromAsync(series, id, 2))["Items"] as JsonArray;
         return list is { Count: > 1 } ? list[1]!.DeepClone() : null;
+    }
+
+    /// <summary>An item's versions, best for this PC first, as the source sheet lists them.</summary>
+    private static async Task<JsonNode> SourcesAsync(JellyfinClient c, string id)
+    {
+        var info = await c.PlaybackInfoAsync(id, 0);
+        var sources = (info["MediaSources"] as JsonArray ?? []).OfType<JsonNode>().ToList();
+        return new JsonArray(Ranked(sources).Select((s, i) => (JsonNode)Describe(s, i == 0)).ToArray());
+    }
+
+    // Best first: what plays straight from the server before what it would convert, then the most detailed picture
+    // this PC is built for (above 1080p only on a dedicated graphics card), then the highest bitrate.
+    private static IEnumerable<JsonNode> Ranked(List<JsonNode> sources)
+    {
+        static JsonNode? Video(JsonNode s) => (s["MediaStreams"] as JsonArray)?.FirstOrDefault(m => (string?)m?["Type"] == "Video");
+        var cap = PlayerTuning.Strong ? int.MaxValue : 1080;
+        return sources
+            .OrderByDescending(s => (bool?)s["SupportsDirectPlay"] == true || (bool?)s["SupportsDirectStream"] == true)
+            .ThenByDescending(s => ((int?)Video(s)?["Height"] ?? 0) is var h && h <= cap ? h : -h)
+            .ThenByDescending(s => (long?)s["Bitrate"] ?? 0);
+    }
+
+    private static JsonObject Describe(JsonNode s, bool best)
+    {
+        var streams = (s["MediaStreams"] as JsonArray ?? []).OfType<JsonNode>().ToList();
+        var video = streams.FirstOrDefault(m => (string?)m["Type"] == "Video");
+        var audio = streams.FirstOrDefault(m => (string?)m["Type"] == "Audio" && (bool?)m["IsDefault"] == true)
+            ?? streams.FirstOrDefault(m => (string?)m["Type"] == "Audio");
+        return new JsonObject
+        {
+            ["id"] = (string?)s["Id"],
+            ["name"] = (string?)s["Name"],
+            ["best"] = best,
+            ["direct"] = (bool?)s["SupportsDirectPlay"] == true || (bool?)s["SupportsDirectStream"] == true,
+            ["size"] = (long?)s["Size"],
+            ["bitrate"] = (long?)s["Bitrate"],
+            ["height"] = (int?)video?["Height"],
+            ["videoCodec"] = (string?)video?["Codec"],
+            ["range"] = (string?)video?["VideoRangeType"] ?? (string?)video?["VideoRange"],
+            ["audioCodec"] = (string?)audio?["Codec"],
+            ["channels"] = (int?)audio?["Channels"],
+            ["language"] = (string?)audio?["Language"],
+        };
     }
 
     private CancellationTokenSource? _searching;

@@ -102,6 +102,16 @@
     </section>
   </div>
 
+  <!-- Which version to play, with Settings > Playback > Source on Ask (app.js). -->
+  <div class="picker" id="sources" hidden>
+    <div class="picker-scrim" data-close-sources></div>
+    <section class="exo-glass is-panel picker-sheet" role="dialog" aria-modal="true" aria-labelledby="sourcesTitle">
+      <h2 id="sourcesTitle">Choose a version</h2>
+      <div class="picker-list" id="sourcesList" role="listbox"></div>
+      <footer class="picker-foot"><button type="button" class="picker-cancel" data-close-sources>Cancel</button></footer>
+    </section>
+  </div>
+
   <main id="stage">
     <header class="top">
       <div class="exo-glass is-over-art capsule title-capsule" data-over-video>

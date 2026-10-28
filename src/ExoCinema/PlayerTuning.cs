@@ -17,7 +17,7 @@ internal static class PlayerTuning
         : "other";
 
     // Integrated graphics get mpv's default scalers; dedicated cards get its high-quality profile.
-    private static bool Strong =>
+    internal static bool Strong =>
         Vendor == "nvidia"
         || (Vendor == "amd" && Gpu.Contains("RX", StringComparison.OrdinalIgnoreCase))
         || (Vendor == "intel" && Gpu.Contains("Arc", StringComparison.OrdinalIgnoreCase));

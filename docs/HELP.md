@@ -50,7 +50,7 @@ Everything can be changed later in Settings, from your picture at the top right.
 ## Settings
 
 - **Look > Material:** Glass, or Solid for plain dark panels.
-- **Playback:** Picture, hardware decoding (leave it on unless a video shows wrong colors or blocks), and Play next episode.
+- **Playback:** Picture; Source (Best plays the best version of a title for this PC, Ask lets you pick one when your server has several); hardware decoding (leave it on unless a video shows wrong colors or blocks); and Play next episode.
 - **Account:** your Jellyfin account page (opens in your browser) and Sign out.
 - **Storage:** the pictures kept from your server, and **Clear** to empty them.
 - **About:** your version, **What's new**, **Check for updates** and **Install update**, and links to report a problem, the privacy statement and the licenses.

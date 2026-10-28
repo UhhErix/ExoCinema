@@ -438,12 +438,19 @@ window.addEventListener('hashchange', render)
 
 // ---- Playing
 
-async function play(id, resume = true) {
+// Play: with Settings > Playback > Source on Ask, the version first (unless the title has just one); otherwise the
+// host takes the best version for this PC. Up Next passes ask = false, so a countdown never stops for a question.
+async function play(id, resume = true, ask = true) {
+  let source
+  if (ask && pref('source') === 'ask' && knownItem(id)?.MediaSourceCount !== 1) {
+    source = await pickSource(id)
+    if (source === null) return
+  }
   try {
     enterPlayer('')
     $('title').textContent = ''
     $('spinner').hidden = false
-    const r = await jf('play', { id, resume, addon: localStorage.getItem('exo:addon') || undefined })
+    const r = await jf('play', { id, resume, addon: localStorage.getItem('exo:addon') || undefined, source })
     if (r) state.playMethod = r.playMethod === 'DirectPlay' ? 'Direct play' : 'Server transcode'
     if (r?.item) window.dispatchEvent(new CustomEvent('exo:now-playing', { detail: r.item }))
   } catch (e) {
@@ -451,6 +458,72 @@ async function play(id, resume = true) {
     leavePlayer()
     toast(e.message)
   }
+}
+
+// The item as this PC last drew it, if it has it: its MediaSourceCount says whether there is a version to choose.
+function knownItem(id) {
+  const prefix = `exo:${session?.userId}:`
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (!key?.startsWith(prefix)) continue
+    let found = null
+    try { JSON.parse(localStorage.getItem(key), (k, v) => { if (!found && v && typeof v === 'object' && v.Id === id && 'MediaSourceCount' in v) found = v; return v }) } catch { }
+    if (found) return found
+  }
+  return null
+}
+
+// A version as the sheet lists it: the picture first, then what else sets it apart.
+const RANGES = { DOVI: 'Dolby Vision', DOVIWithHDR10: 'Dolby Vision', DOVIWithHLG: 'Dolby Vision', DOVIWithSDR: 'Dolby Vision', HDR10: 'HDR10', HDR10Plus: 'HDR10+', HLG: 'HLG' }
+const CODECS = { hevc: 'HEVC', h264: 'H.264', av1: 'AV1', vp9: 'VP9', mpeg2video: 'MPEG-2', truehd: 'TrueHD', eac3: 'E-AC-3', ac3: 'AC-3', dts: 'DTS', aac: 'AAC', flac: 'FLAC', opus: 'Opus', mp3: 'MP3' }
+const CHANNELS = { 1: 'Mono', 2: 'Stereo', 6: '5.1', 8: '7.1' }
+
+function sourceRow(s) {
+  const h = s.height ?? 0
+  const res = h >= 2000 ? '4K' : h >= 1400 ? '1440p' : h >= 1000 ? '1080p' : h >= 700 ? '720p' : h ? `${h}p` : ''
+  const range = Object.entries(RANGES).find(([k]) => s.range?.startsWith(k))?.[1] ?? ''
+  const picture = [res, range, CODECS[s.videoCodec] ?? s.videoCodec?.toUpperCase()].filter(Boolean).join(' · ') || s.name || 'Version'
+  let language = s.language ?? ''
+  try { language = language && (new Intl.DisplayNames(undefined, { type: 'language' }).of(language) ?? language) } catch { }
+  const audio = [CODECS[s.audioCodec] ?? s.audioCodec?.toUpperCase(), CHANNELS[s.channels] ?? (s.channels ? `${s.channels} ch` : ''), language].filter(Boolean).join(' ')
+  // The version's own name only when it says more than the picture does ("4K Remux", not "1080p" again).
+  const named = s.name && !picture.toLowerCase().includes(s.name.toLowerCase()) ? s.name : ''
+  const detail = [named, s.size ? bytes(s.size) : '', s.bitrate ? `${Math.round(s.bitrate / 1e6)} Mbps` : '', audio, s.direct ? '' : 'Converted by the server'].filter(Boolean).join(' · ')
+  return `<button type="button" class="source-row" role="option" data-source="${esc(s.id)}">
+    <span class="source-text"><span class="source-name">${esc(picture)}</span><span class="source-detail">${esc(detail)}</span></span>
+    ${s.best ? '<span class="source-best">Best</span>' : ''}</button>`
+}
+
+// The source sheet: the item's versions, best first, to pick one; null when it is put away. It opens at once and
+// fills when the server answers; a title with one version plays without asking.
+function pickSource(id) {
+  return new Promise((resolve) => {
+    const sheet = $('sources'), list = $('sourcesList')
+    let done = false
+    const finish = (value) => {
+      if (done) return
+      done = true
+      sheet.hidden = true
+      sheet.onclick = null
+      document.removeEventListener('keydown', onKey, true)
+      resolve(value)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(null) } }
+    list.innerHTML = '<div class="spinner sources-wait"></div>'
+    sheet.hidden = false
+    document.addEventListener('keydown', onKey, true)
+    sheet.onclick = (e) => {
+      if (e.target.closest('[data-close-sources]')) finish(null)
+      const row = e.target.closest('[data-source]')
+      if (row) finish(row.dataset.source)
+    }
+    jf('sources', { id }).then((all) => {
+      if (done) return
+      if (!all?.length || all.length === 1) { finish(all?.[0]?.id); return }
+      list.innerHTML = all.map(sourceRow).join('')
+      list.querySelector('[data-source]')?.focus({ preventScroll: true })
+    }).catch((err) => { if (!done) { finish(null); toast(err.message) } })
+  })
 }
 
 window.addEventListener('exo:notice', (e) => toast(e.detail))
@@ -515,6 +588,7 @@ $('profileBtn').addEventListener('click', (e) => {
 const PREFS = {
   material: { label: 'Material', options: [['glass', 'Glass'], ['solid', 'Solid']], fallback: 'glass' },
   quality: { label: 'Picture', options: [['high', 'High quality'], ['balanced', 'Balanced']], get fallback() { return state.tuning?.profile === 'default' ? 'balanced' : 'high' } },
+  source: { label: 'Source', options: [['best', 'Best'], ['ask', 'Ask']], fallback: 'best' },
   hwdec: { label: 'Hardware decoding', options: [['on', 'On'], ['off', 'Off']], fallback: 'on' },
   autoplay: { label: 'Play next episode', options: [['on', 'On'], ['off', 'Off']], fallback: 'on' },
 }
@@ -553,7 +627,7 @@ async function renderSettings() {
   view.innerHTML = `<section class="settings-page">
     <h1>Settings</h1>
     <div class="exo-glass is-panel set-group"><h2>Look</h2>${row('material')}</div>
-    <div class="exo-glass is-panel set-group"><h2>Playback</h2>${row('quality')}${row('hwdec')}${row('autoplay')}
+    <div class="exo-glass is-panel set-group"><h2>Playback</h2>${row('quality')}${row('source')}${row('hwdec')}${row('autoplay')}
       <div class="set-row"><span class="set-name">Stream addon</span><input class="exo-field" id="addonUrl" type="url" inputmode="url" style="width:280px" placeholder="Stremio manifest URL" spellcheck="false" autocapitalize="off" value="${esc(localStorage.getItem('exo:addon') ?? '')}"></div></div>
     <div class="exo-glass is-panel set-group"><h2>Account</h2>
       <div class="set-row"><span class="set-name">${esc(session.userName)}</span><span class="set-value">${esc(session.serverName)}</span></div>

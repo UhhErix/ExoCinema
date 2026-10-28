@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 — October 28, 2026
+
+The best version of every title, or your pick.
+
+- **The best version, every time.** A title your server has in more than one version (4K and 1080p, a remux and a smaller copy) played whichever the server listed first. Play now takes the best one for this PC: one it can play as it is before one the server would convert, then the sharpest picture this PC is built for (above 1080p only on a dedicated graphics card), then the highest bitrate. Up Next and autoplay take it too. _Verified: end-to-end with a test server listing 1080p before 4K; the 4K version played._
+- **Or choose it yourself.** Settings > Playback > Source on Ask shows every version when you press Play: its picture (4K, Dolby Vision, HEVC), its name, size, bitrate and sound, the best one marked; Escape or Cancel puts it away, and a title with one version plays without asking. _Verified: end-to-end; picking 1080p played the 1080p version._
+
 ## 1.0.2 — October 27, 2026
 
 Skip where you look, rows that page, and no white boxes.

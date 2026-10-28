@@ -167,7 +167,7 @@ function playNext() {
   const n = plus.next
   if (!n || !inPlayer()) return
   hideUpNext()
-  play(n.Id, true)
+  play(n.Id, true, false)
 }
 
 $('upNext').addEventListener('click', (e) => {

@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.0.3",
+    "items": [
+      {
+        "icon": "Play",
+        "title": "The best version, every time",
+        "detail": "When your server has a title in more than one version, Play picks the best one for this PC: one it can play as is, in the sharpest picture your graphics card is built for."
+      },
+      {
+        "icon": "Tracks",
+        "title": "Or choose it yourself",
+        "detail": "Settings > Playback > Source on Ask shows every version when you press Play, with its picture, size and sound, the best one marked."
+      }
+    ]
+  },
+  {
     "version": "1.0.2",
     "items": [
       {
