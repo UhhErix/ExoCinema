@@ -622,7 +622,7 @@ async function renderSettings() {
     <h1>Settings</h1>
     <div class="exo-glass is-panel set-group"><h2>Look</h2>${row('material')}</div>
     <div class="exo-glass is-panel set-group"><h2>Playback</h2>${row('source')}${row('autoplay')}
-      <div class="set-row"><span class="set-name">Stream addon</span><input class="exo-field" id="addonUrl" type="url" inputmode="url" style="width:280px" placeholder="Stremio manifest URL" spellcheck="false" autocapitalize="off" value="${esc(localStorage.getItem('exo:addon') ?? '')}"></div></div>
+      <div class="set-row"><span class="set-name">Stream addon</span><input class="exo-field is-secret" id="addonUrl" type="url" inputmode="url" style="width:280px" placeholder="Stremio manifest URL" spellcheck="false" autocapitalize="off" autocomplete="off" value="${esc(localStorage.getItem('exo:addon') ?? '')}"></div></div>
     <div class="exo-glass is-panel set-group"><h2>Account</h2>
       <div class="set-row"><span class="set-name">${esc(session.userName)}</span><span class="set-value">${esc(session.serverName)}</span></div>
       <div class="set-row"><span class="set-name">Jellyfin account</span><button type="button" class="set-btn" data-app="jellyfin-settings">Open</button></div>

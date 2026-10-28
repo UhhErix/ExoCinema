@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.6 — October 28, 2026
+
+Your links and keys stay yours, on screen and in the log.
+
+- **Your add-on link stays private.** Settings > Playback > Stream addon shows a saved link as dots, as a password field does, so it never shows in a screenshot or a stream; pasting a new link or clearing the field works as before. _Verified: on screen._
+- **A log that's safe to share.** `app.log` wrote whole stream addresses, with the server's address and its access token in them. Now every web address is cut to its scheme and kind of file (`https://…/*.mkv`), the servers and add-ons in use are blanked wherever else they're named, and your Windows user folder reads `%USERPROFILE%`; `crash.log` gets the same. WebView2's form memory is off too, so nothing typed into the app is kept by it. _Verified: end-to-end; after a play and an unreachable server, the log held no address, token or user name._
+- **Newer mpv and FFmpeg.** zhongfly's LGPL libmpv build of October 28: mpv v0.41.0-1320-gad5877eda and FFmpeg N-128134-gc69954c34 (from v0.41.0-1308 and N-128097). _Verified: 4K60 Dolby Vision with no dropped frames; 720p with RTX Super Resolution; the player's glass on the graphics card._
+- **Up to date.** Every NuGet package (Windows App SDK 2.6.4, WebView2 SDK 1.0.4314.35) is on its newest version. .NET's 10.0.14 runtime comes in the next release, together with Exo Launcher's. _Checked in code only._
+
 ## 1.0.5 — October 28, 2026
 
 Settings with one right answer are now just done.

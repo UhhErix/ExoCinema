@@ -28,7 +28,7 @@ public partial class App : Application
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(CrashLog)!);
-            File.AppendAllText(CrashLog, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {where}: {e}\n\n");
+            File.AppendAllText(CrashLog, AppLog.Clean($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {where}: {e}\n\n"));
         }
         catch (IOException) { }
     }

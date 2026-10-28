@@ -152,6 +152,9 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         core.Settings.IsStatusBarEnabled = false;
         core.Settings.IsZoomControlEnabled = false;
         core.Settings.AreBrowserAcceleratorKeysEnabled = false;
+        // Nothing typed into the page is kept by WebView2's form memory: Exo Cinema keeps what it needs itself, sealed.
+        core.Settings.IsGeneralAutofillEnabled = false;
+        core.Settings.IsPasswordAutosaveEnabled = false;
         core.SetVirtualHostNameToFolderMapping("cinema.exo", Path.Combine(AppContext.BaseDirectory, "wwwroot"), CoreWebView2HostResourceAccessKind.Deny);
         core.WebMessageReceived += OnWebMessage;
         _images = new ImageCache(core, env);
@@ -230,9 +233,17 @@ public sealed partial class MainWindow : Window, IPlayerSurface
     private async Task AnswerAsync(JsonNode msg)
     {
         var id = (int)msg["id"]!;
+        // The servers and add-ons in use never appear by name in app.log (AppLog.Redact).
+        _log.Hide(_jellyfin.Server);
+        if (msg["args"] is JsonObject args)
+        {
+            _log.Hide((string?)args["server"]);
+            _log.Hide((string?)args["addon"]);
+        }
         try
         {
             var data = await _jellyfin.HandleAsync((string)msg["op"]!, msg["args"]);
+            _log.Hide(_jellyfin.Server);
             PostJson($"{{\"type\":\"reply\",\"id\":{id},\"ok\":true,\"data\":{data?.ToJsonString() ?? "null"}}}");
         }
         catch (Exception e)

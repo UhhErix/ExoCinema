@@ -803,6 +803,9 @@ img { display: block; }
 
 .exo-field:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
 .exo-field::placeholder { color: var(--color-muted); }
+/* A link with someone's own keys in it (an add-on's) shows as dots, as a password does: it stays off screenshots and streams. */
+.exo-field.is-secret { -webkit-text-security: disc; }
+.exo-field.is-secret:placeholder-shown { -webkit-text-security: none; }
 
 .server-found {
   margin-top: -6px;

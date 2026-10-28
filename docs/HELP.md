@@ -67,4 +67,4 @@ Windows **Settings > Apps > Installed apps > Exo Cinema > Uninstall**. Your sign
 
 ## Something wrong?
 
-[Report a problem](https://github.com/UhhErix/ExoCinema/issues/new/choose). Say what you were watching (the kind of file, not its name, is enough) and attach the end of `%LocalAppData%\ExoCinema\app.log`, with your server's address taken out.
+[Report a problem](https://github.com/UhhErix/ExoCinema/issues/new/choose). Say what you were watching (the kind of file, not its name, is enough) and attach the end of `%LocalAppData%\ExoCinema\app.log`. Exo Cinema keeps your server's address, links, keys and titles out of it.

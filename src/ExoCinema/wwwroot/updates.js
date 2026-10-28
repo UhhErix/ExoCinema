@@ -1,7 +1,7 @@
 // What's New after an update and from Settings › About, and updates (the host checks GitHub: MainWindow.App.cs).
 
 // whats-new.json names icons in letters only; these are Exo Cinema's glyphs for them.
-const NEWS_ICONS = { Library: 'movie', Sync: 'device-tv', Play: 'player-play-filled', Glass: 'sparkles', Tracks: 'adjustments-horizontal', Skip: 'player-skip-forward-filled', Home: 'home', Search: 'search' }
+const NEWS_ICONS = { Library: 'movie', Sync: 'device-tv', Play: 'player-play-filled', Glass: 'sparkles', Tracks: 'adjustments-horizontal', Skip: 'player-skip-forward-filled', Home: 'home', Search: 'search', Private: 'lock' }
 
 let appInfo = null
 const update = { state: 'idle', latest: null, notes: null, installable: false, percent: 0, message: '' }

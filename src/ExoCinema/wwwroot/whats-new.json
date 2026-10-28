@@ -1,5 +1,25 @@
 [
   {
+    "version": "1.0.6",
+    "items": [
+      {
+        "icon": "Private",
+        "title": "Your add-on link stays private",
+        "detail": "Settings shows a saved add-on link as dots, so it never shows up in a screenshot or a stream."
+      },
+      {
+        "icon": "Private",
+        "title": "A log that's safe to share",
+        "detail": "app.log no longer keeps web addresses, keys, titles or your server's name, so you can attach it to a problem report as it is."
+      },
+      {
+        "icon": "Play",
+        "title": "Newer mpv and FFmpeg",
+        "detail": "The player is on the newest builds of mpv and FFmpeg."
+      }
+    ]
+  },
+  {
     "version": "1.0.5",
     "items": [
       {
