@@ -1,0 +1,240 @@
+name: Discord release announcement
+
+# Keeps exactly one release card per Discord releases channel: when a release is
+# published (stable or pre-release), posts the branded card for it, deletes the
+# previous card, and stores the new Discord message id as a workflow artifact
+# for the next run. Run manually with dry_run=true to preview the payload built
+# from the latest release, or dry_run=false to perform the same replace.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build the payload from the latest release and print it instead of posting
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: discord-release-card
+  cancel-in-progress: false
+
+env:
+  PRODUCT: "Exo Cinema"
+  AVATAR_FILE: exo-cinema-avatar.png
+  ASSET_DIR: .github/discord
+  STATE_ARTIFACT: discord-last-release-message
+
+jobs:
+  announce:
+    name: Announce release on Discord
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Resolve release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          API_URL: ${{ github.api_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/release.json"
+          if [[ "$EVENT_NAME" == "release" ]]; then
+            jq '.release' "$GITHUB_EVENT_PATH" > "$out"
+          else
+            api() {
+              curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                -w '\n%{http_code}' "$API_URL/repos/$REPO/$1"
+            }
+            resp="$(api releases/latest)"
+            code="${resp##*$'\n'}"
+            if [[ "$code" == "200" ]]; then
+              printf '%s' "${resp%$'\n'*}" > "$out"
+            else
+              echo "No latest stable release (HTTP $code); falling back to the most recent release incl. pre-releases."
+              resp="$(api 'releases?per_page=20')"
+              code="${resp##*$'\n'}"
+              if [[ "$code" != "200" ]]; then
+                echo "::error::Failed to list releases (HTTP $code)."
+                exit 1
+              fi
+              printf '%s' "${resp%$'\n'*}" | jq 'map(select(.draft | not)) | first // empty' > "$out"
+            fi
+          fi
+          if ! jq -e 'type == "object" and has("tag_name")' "$out" > /dev/null; then
+            echo "::error::Could not resolve a published release for $REPO."
+            exit 1
+          fi
+          jq -r '"Release: \(.tag_name) (prerelease=\(.prerelease)) \(.html_url)"' "$out"
+
+      - name: Build payload
+        env:
+          ROLE_ID: ${{ vars.DISCORD_RELEASE_ROLE_ID }}
+        run: |
+          set -euo pipefail
+          # ?v= busts Discord's image-proxy cache when the avatar file changes.
+          icon_url="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/$ASSET_DIR/$AVATAR_FILE?v=${GITHUB_SHA:0:12}"
+          role="${ROLE_ID:-}"
+          role="${role//[[:space:]]/}"
+          if [[ -n "$role" && ! "$role" =~ ^[0-9]{17,20}$ ]]; then
+            echo "::warning::Variable DISCORD_RELEASE_ROLE_ID is not a Discord snowflake; posting without a role mention."
+            role=""
+          fi
+          # Discord blocks phantom pings: <@&id> has to be in content on POST
+          # (flags 4096 = silent). The post step immediately clears content
+          # so the card is embed-only — spoilers and ZWSP still leave a line.
+          jq -n \
+            --arg product "$PRODUCT" \
+            --arg icon "$icon_url" \
+            --arg role "$role" \
+            --slurpfile rel "$RUNNER_TEMP/release.json" '
+            $rel[0] as $r
+            | ($r.prerelease == true) as $pre
+            | {
+                username: "\($product) Releases",
+                avatar_url: $icon,
+                content: (if $role != "" then "<@&\($role)>" else "" end),
+                allowed_mentions: (if $role != "" then { parse: [], roles: [$role] } else { parse: [] } end),
+                flags: 4096,
+                embeds: [
+                  {
+                    color: 1118740,
+                    title: ("\($product) \($r.tag_name)" + (if $pre then " (Pre-release)" else "" end))[0:256],
+                    url: $r.html_url,
+                    description: "A new version of \($product) is out. The full changelog is built into the app.",
+                    fields: [
+                      {
+                        name: "Channel",
+                        value: (if $pre then "Pre-release" else "Stable" end),
+                        inline: true
+                      }
+                    ],
+                    footer: { text: "Exo", icon_url: $icon },
+                    timestamp: ($r.published_at // $r.created_at)
+                  }
+                ]
+              }
+            | if .content == "" then del(.content) else . end' > "$RUNNER_TEMP/payload.json"
+          jq -e '.embeds | length == 1' "$RUNNER_TEMP/payload.json" > /dev/null
+
+      - name: Load previous card id
+        id: prev
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API_URL: ${{ github.api_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
+          list="$(curl -sS --fail-with-body "${auth[@]}" \
+            "$API_URL/repos/$REPO/actions/artifacts?name=$STATE_ARTIFACT&per_page=20")" || {
+            echo "::warning::Could not list artifacts; the previous card will not be removed."
+            exit 0
+          }
+          dl="$(jq -r '[.artifacts[] | select(.expired | not)] | sort_by(.created_at) | last | .archive_download_url // empty' <<< "$list")"
+          if [[ -z "$dl" ]]; then
+            echo "No stored previous card id."
+            exit 0
+          fi
+          if ! curl -sSL --fail "${auth[@]}" -o "$RUNNER_TEMP/state.zip" "$dl"; then
+            echo "::warning::Could not download $STATE_ARTIFACT; the previous card will not be removed."
+            exit 0
+          fi
+          id="$(unzip -p "$RUNNER_TEMP/state.zip" message-id.txt 2>/dev/null | tr -d '[:space:]' || true)"
+          if [[ "$id" =~ ^[0-9]{17,20}$ ]]; then
+            echo "Previous card message id: $id"
+            echo "message_id=$id" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Stored previous card id is invalid; ignoring it."
+          fi
+
+      - name: Post new card and remove previous (or print in dry run)
+        id: post
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          WEBHOOK_URL: ${{ secrets.DISCORD_RELEASES_WEBHOOK }}
+          PREV_ID: ${{ steps.prev.outputs.message_id }}
+        run: |
+          set -euo pipefail
+          payload="$RUNNER_TEMP/payload.json"
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "Dry run: not posting. Payload (application/json):"
+            jq . "$payload"
+            if jq -e '.content != null and .content != ""' "$payload" > /dev/null; then
+              echo "Would then PATCH content to empty (hide the role mention after it fires)."
+            fi
+            echo "Would then delete previous card: ${PREV_ID:-<none stored>}"
+            if [[ -z "${WEBHOOK_URL:-}" ]]; then
+              echo "::warning::Secret DISCORD_RELEASES_WEBHOOK is not set; a real run would fail."
+            fi
+            exit 0
+          fi
+          if [[ -z "${WEBHOOK_URL:-}" ]]; then
+            echo "::error::Repository secret DISCORD_RELEASES_WEBHOOK is missing or empty. Add the Discord webhook URL under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          # Split an optional query string (e.g. thread_id) off the webhook URL.
+          base="${WEBHOOK_URL%%\?*}"
+          base="${base%/}"
+          query=""
+          [[ "$WEBHOOK_URL" == *\?* ]] && query="${WEBHOOK_URL#*\?}"
+          # URLs are passed via curl config on stdin so they never appear in argv or logs.
+          discord() { # method path-suffix query-extra [curl args...]
+            local method="$1" suffix="$2" extra="$3"
+            shift 3
+            local q="$query"
+            [[ -n "$extra" ]] && q="${q:+$q&}$extra"
+            printf 'url = "%s%s%s"\n' "$base" "$suffix" "${q:+?$q}" | curl -sS -K - -X "$method" \
+              -o "$RUNNER_TEMP/discord-response.json" -w '%{http_code}' "$@"
+          }
+          code="$(discord POST "" "wait=true" -H "Content-Type: application/json" --data-binary "@$payload")"
+          if [[ "$code" != 2* ]]; then
+            echo "::error::Discord webhook returned HTTP $code."
+            jq -c '{code, message, errors}' "$RUNNER_TEMP/discord-response.json" 2>/dev/null || true
+            exit 1
+          fi
+          new_id="$(jq -r '.id // empty' "$RUNNER_TEMP/discord-response.json")"
+          if [[ ! "$new_id" =~ ^[0-9]{17,20}$ ]]; then
+            echo "::error::Discord did not return a message id."
+            exit 1
+          fi
+          echo "Posted release card (HTTP $code, message id $new_id)."
+          echo "message_id=$new_id" >> "$GITHUB_OUTPUT"
+          mkdir -p "$RUNNER_TEMP/state"
+          printf '%s\n' "$new_id" > "$RUNNER_TEMP/state/message-id.txt"
+          # Mention already fired; strip the markup so the card has no content line.
+          if jq -e '.content != null and .content != ""' "$payload" > /dev/null; then
+            printf '%s\n' '{"content":""}' > "$RUNNER_TEMP/strip.json"
+            strip_code="$(discord PATCH "/messages/$new_id" "" -H "Content-Type: application/json" --data-binary "@$RUNNER_TEMP/strip.json")"
+            case "$strip_code" in
+              2*) echo "Cleared role markup from card $new_id." ;;
+              *) echo "::warning::Posted the card but could not hide the role mention (HTTP $strip_code)." ;;
+            esac
+          fi
+          if [[ -n "${PREV_ID:-}" && "$PREV_ID" != "$new_id" ]]; then
+            code="$(discord DELETE "/messages/$PREV_ID" "")"
+            case "$code" in
+              204) echo "Deleted previous card $PREV_ID." ;;
+              404) echo "Previous card $PREV_ID was already gone." ;;
+              *) echo "::warning::Could not delete previous card $PREV_ID (HTTP $code)." ;;
+            esac
+          else
+            echo "No previous card to delete."
+          fi
+
+      - name: Save card id for next run
+        if: steps.post.outputs.message_id != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.STATE_ARTIFACT }}
+          path: ${{ runner.temp }}/state/message-id.txt
+          retention-days: 90
+          if-no-files-found: error
