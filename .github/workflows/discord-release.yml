@@ -97,7 +97,6 @@ jobs:
             --arg role "$role" \
             --slurpfile rel "$RUNNER_TEMP/release.json" '
             $rel[0] as $r
-            | ([$r.assets[]? | select(.name | test("\\.(exe|msix|msixbundle|zip)$"; "i"))] | first) as $asset
             | ($r.prerelease == true) as $pre
             | {
                 username: "\($product) Releases",
@@ -112,13 +111,6 @@ jobs:
                     url: $r.html_url,
                     description: "A new version of \($product) is out. The full changelog is built into the app.",
                     fields: [
-                      {
-                        name: "Download",
-                        value: (if $asset
-                                then "[\($asset.name | gsub("[\\[\\]]"; ""))](\($asset.browser_download_url))"
-                                else "[Release page](\($r.html_url))" end),
-                        inline: true
-                      },
                       {
                         name: "Channel",
                         value: (if $pre then "Pre-release" else "Stable" end),
