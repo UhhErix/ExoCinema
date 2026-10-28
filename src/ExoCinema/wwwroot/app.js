@@ -587,9 +587,7 @@ $('profileBtn').addEventListener('click', (e) => {
 
 const PREFS = {
   material: { label: 'Material', options: [['glass', 'Glass'], ['solid', 'Solid']], fallback: 'glass' },
-  quality: { label: 'Picture', options: [['high', 'High quality'], ['balanced', 'Balanced']], get fallback() { return state.tuning?.profile === 'default' ? 'balanced' : 'high' } },
   source: { label: 'Source', options: [['best', 'Best'], ['ask', 'Ask']], fallback: 'best' },
-  hwdec: { label: 'Hardware decoding', options: [['on', 'On'], ['off', 'Off']], fallback: 'on' },
   autoplay: { label: 'Play next episode', options: [['on', 'On'], ['off', 'Off']], fallback: 'on' },
 }
 
@@ -600,18 +598,12 @@ function setPref(key, value) {
   applyPrefs()
 }
 
-// mpv's options for Picture: High quality is mpv's own high-quality profile; Balanced is lighter scalers for weaker
-// graphics or battery.
+// The picture and the decoder aren't here: the app picks them from this PC as it plays (MainWindow.Player.cs).
 function applyPrefs() {
   document.documentElement.dataset.material = pref('material')
-  send({ cmd: 'set', name: 'hwdec', value: pref('hwdec') === 'on' ? 'auto-safe' : 'no' })
-  // High quality includes the driver's AI upscaling where this PC has it switched on (MainWindow.Player.cs).
-  send({ cmd: 'upscale', on: pref('quality') === 'high' })
-  if (pref('quality') === 'high') send({ cmd: 'command', args: ['apply-profile', 'high-quality'] })
-  else for (const [name, value] of [['scale', 'spline36'], ['cscale', 'spline36'], ['dscale', 'mitchell'], ['deband', 'no']]) send({ cmd: 'set', name, value })
 }
 applyPrefs()
-onHost((m) => { if (m.type === 'hello') applyPrefs() })
+try { for (const key of ['quality', 'hwdec']) localStorage.removeItem(`exo:pref:${key}`) } catch { }
 
 // One choice as Settings shows it: its name, and its options in Exo's segmented capsule.
 const prefRow = (key) => `<div class="set-row"><span class="set-name">${PREFS[key].label}</span>
@@ -629,7 +621,7 @@ async function renderSettings() {
   view.innerHTML = `<section class="settings-page">
     <h1>Settings</h1>
     <div class="exo-glass is-panel set-group"><h2>Look</h2>${row('material')}</div>
-    <div class="exo-glass is-panel set-group"><h2>Playback</h2>${row('quality')}${row('source')}${row('hwdec')}${row('autoplay')}
+    <div class="exo-glass is-panel set-group"><h2>Playback</h2>${row('source')}${row('autoplay')}
       <div class="set-row"><span class="set-name">Stream addon</span><input class="exo-field" id="addonUrl" type="url" inputmode="url" style="width:280px" placeholder="Stremio manifest URL" spellcheck="false" autocapitalize="off" value="${esc(localStorage.getItem('exo:addon') ?? '')}"></div></div>
     <div class="exo-glass is-panel set-group"><h2>Account</h2>
       <div class="set-row"><span class="set-name">${esc(session.userName)}</span><span class="set-value">${esc(session.serverName)}</span></div>

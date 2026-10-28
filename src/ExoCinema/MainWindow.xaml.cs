@@ -171,7 +171,7 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         {
             case "ready":
                 // The page loaded after mpv started: give it everything it missed.
-                Post(new { type = "hello", tuning = PlayerTuning.Describe(), timings = _log.Marks, app = Info() });
+                Post(new { type = "hello", tuning = PlayerTuning.Describe(), picture = _pictureSaid, timings = _log.Marks, app = Info() });
                 NotifyWindowState(force: true);
                 Post(new { type = "fullscreen", on = _fullScreen });
                 foreach (var (name, value) in _props) Post(new { type = "prop", name, value });
@@ -206,9 +206,6 @@ public sealed partial class MainWindow : Window, IPlayerSurface
                 break;
             case "glass":
                 SetGlass(msg);
-                break;
-            case "upscale":
-                SetUpscaling((bool)msg["on"]!);
                 break;
             case "chrome":
                 SetChromeLayout(Rects(msg["regions"]), Rect(msg["maximize"]));

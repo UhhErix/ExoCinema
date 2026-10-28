@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.0.5",
+    "items": [
+      {
+        "icon": "Glass",
+        "title": "The picture picks itself",
+        "detail": "High quality on a dedicated graphics card, Balanced on integrated graphics or battery, and lighter for a video that starts dropping frames. Picture is gone from Settings."
+      },
+      {
+        "icon": "Play",
+        "title": "Hardware decoding, always",
+        "detail": "Video is decoded on your graphics card, and in software only when the card can't, so its switch is gone too."
+      }
+    ]
+  },
+  {
     "version": "1.0.4",
     "items": [
       {

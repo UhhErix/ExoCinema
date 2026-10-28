@@ -16,7 +16,7 @@ Exo Cinema installs for your Windows user only, in `%LocalAppData%\ExoCinema\app
 ## First run
 
 - **Jellyfin:** your server's address (as you'd type it in a browser, such as `jellyfin.example.com` or `http://192.168.1.20:8096`), your user name and your password. When the server is found, its name and Jellyfin version show under the address. If your server has Quick Connect on, **Use Quick Connect** shows a code to approve from another Jellyfin app where you're signed in.
-- **Playback:** Picture (High quality, or Balanced for lighter scaling) and whether the next episode plays by itself.
+- **Playback:** Source (Best, or Ask to pick a version when your server has several) and whether the next episode plays by itself.
 - **Your look:** Glass or Solid.
 
 Everything can be changed later in Settings, from your picture at the top right.
@@ -39,19 +39,20 @@ Everything can be changed later in Settings, from your picture at the top right.
 | ↑ and ↓ | Volume |
 | M | Mute |
 | F, or a double click | Full screen |
-| I | What's playing and how (decoder, video, frame rate) |
+| I | What's playing and how (picture, decoder, video, frame rate) |
 | Esc | Leave full screen, or go back |
 
 - **Audio, subtitles and speed:** the sliders button at the top right. Each show remembers the languages you pick for its next episodes.
 - **Skip intro** and **Skip credits** show while an opening or credits play, when your server has them marked (Jellyfin's media segments) or the file names them in its chapters.
 - **Up Next** shows near the end of an episode. With **Play next episode** on, the next one plays when the count runs out; **Not now** stops it.
+- **The picture** is picked for your PC as it plays, with no setting: High quality (mpv's high-quality scaling) on a dedicated graphics card on mains power; Balanced on integrated graphics, on battery, and for the rest of a video that keeps dropping frames. Video is decoded on the graphics card, and in software when the card can't decode it. **I** shows which.
+- **AI upscaling:** on High quality, an NVIDIA RTX card enlarges video smaller than your screen with RTX Video Super Resolution, when that's on in Exo Launcher's PC > Display (or NVIDIA's own settings). It steps aside while a game runs.
 - **Buffering:** the player reads ahead as far as memory allows and waits for a few seconds of picture before playing on. If it buffers often, `%LocalAppData%\ExoCinema\app.log` notes each wait with how fast the link was and how fast the video needs it.
 
 ## Settings
 
 - **Look > Material:** Glass, or Solid for plain dark panels.
-- **AI upscaling:** with Picture on High quality, an NVIDIA RTX card enlarges video smaller than your screen with RTX Video Super Resolution, when that's on in Exo Launcher's PC > Display (or NVIDIA's own settings). It steps aside while a game runs.
-- **Playback:** Picture; Source (Best plays the best version of a title for this PC, Ask lets you pick one when your server has several); hardware decoding (leave it on unless a video shows wrong colors or blocks); and Play next episode.
+- **Playback:** Source (Best plays the best version of a title for this PC, Ask lets you pick one when your server has several) and Play next episode.
 - **Account:** your Jellyfin account page (opens in your browser) and Sign out.
 - **Storage:** the pictures kept from your server, and **Clear** to empty them.
 - **About:** your version, **What's new**, **Check for updates** and **Install update**, and links to report a problem, the privacy statement and the licenses.

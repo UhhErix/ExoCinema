@@ -47,7 +47,7 @@ function drawOb(n, dir) {
       }
       break
     case 'playback':
-      step.innerHTML = `${title('Playback')}<div class="ob-body"><div class="exo-glass is-panel set-group">${prefRow('quality')}${prefRow('autoplay')}</div></div>`
+      step.innerHTML = `${title('Playback')}<div class="ob-body"><div class="exo-glass is-panel set-group">${prefRow('source')}${prefRow('autoplay')}</div></div>`
       cta.textContent = 'Continue'
       break
     case 'look':

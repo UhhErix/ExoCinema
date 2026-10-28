@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.5 — October 28, 2026
+
+Settings with one right answer are now just done.
+
+- **The picture picks itself.** Settings > Playback > Picture is gone. Exo Cinema draws High quality (mpv's high-quality scalers, with RTX Video Super Resolution where it's on) on a dedicated graphics card on mains power, and Balanced on integrated graphics and on battery. A video that drops a frame a second for a minute goes Balanced for the rest of it; the next one starts on High again. The player's readings (I) say which. _Verified: on an RTX 3070, a 720p clip played on High with RTX Super Resolution; made to drop 62 frames in a minute, it went Balanced and the upscaler stepped aside; the next video started on High; a minimized window dropped none. On battery: checked in code only, as the test PC is a desktop._
+- **Hardware decoding, always.** Its switch is gone: video is decoded on the graphics card, and mpv falls back to software for anything the card can't decode, as it did with the switch on. _Verified: Direct3D 11 decoding on the test clip._
+- **First run:** the Playback step now sets Source and Play next episode.
+
 ## 1.0.4 — October 28, 2026
 
 AI upscaling on RTX cards, and updates that wait for the folder.

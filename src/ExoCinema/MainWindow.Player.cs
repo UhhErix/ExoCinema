@@ -138,8 +138,9 @@ public sealed partial class MainWindow
         {
             _log.Mark("file-loaded", now - _loadAt);
         }
-        // The decoder and the picture's size are known (or changed): upscale or not, for this video.
-        if (name == "video-reconfig") ApplyUpscaling();
+        // A new video starts on the best picture this PC draws; once its decoder and size are known, upscale or not.
+        if (name == "start-file") _lighterForThisVideo = false;
+        if (name == "video-reconfig") ApplyPicture();
         OnUi(() =>
         {
             if (name == "playback-restart") _jellyfin.OnPlaybackRestart();
@@ -157,49 +158,69 @@ public sealed partial class MainWindow
     // Direct3D 11 video processor, as Edge and Chrome ask for it. Only for SDR video decoded on the card, with Picture
     // on High quality. With the switch off the driver's processor would only scale plainly, worse than mpv's own
     // scalers, so then nothing changes.
-    private readonly Lock _upscaleGate = new();
-    private bool _upscaleWanted = true, _upscaleOffNoted;
+    private bool _upscaleOffNoted;
     private string _upscaleFilter = "";
 
-    private void SetUpscaling(bool wanted)
-    {
-        _upscaleWanted = wanted;
-        ApplyUpscaling();
-    }
+    // The picture, chosen for this PC instead of in Settings: High quality (mpv's high-quality scalers, and the AI
+    // upscaling above) on a dedicated graphics card on mains power; Balanced on integrated graphics (mpv's own scalers),
+    // on battery, and for the rest of a video once it drops frames (a stream too heavy for the card, something else
+    // using it). A new video starts on High again. Called from mpv's events and the minute timer, so one at a time.
+    private readonly Lock _pictureGate = new();
+    private bool _pictureHigh = PlayerTuning.Strong, _lighterForThisVideo;
+    private string _pictureSaid = "";
+    private static readonly (string, string)[] Balanced = [("scale", "spline36"), ("cscale", "spline36"), ("dscale", "mitchell"), ("deband", "no")];
 
-    private void ApplyUpscaling()
+    private void ApplyPicture(string why = "")
     {
         if (_mpv is not { } mpv || _closingWindow) return;
-        lock (_upscaleGate)
+        lock (_pictureGate)
         {
-            try
+            var high = PlayerTuning.Strong && !_lighterForThisVideo && !PlayerTuning.OnBattery();
+            if (high != _pictureHigh)
             {
-                static double Num(string? s) => double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
-                var want = "";
-                double scale = 0;
-                var height = Num(mpv.Get("video-params/h"));
-                if (_upscaleWanted && height > 0 && PlayerTuning.Vendor == "nvidia" && PlayerTuning.Gpu.Contains("RTX", StringComparison.OrdinalIgnoreCase)
-                    && mpv.Get("hwdec-current") == "d3d11va" && mpv.Get("video-params/gamma") is not ("pq" or "hlg") && !GameRunning())
-                {
-                    scale = Math.Min(4, Math.Max(Num(mpv.Get("display-height")), Num(mpv.Get("osd-height"))) / height);
-                    var setting = scale >= 1.2 ? NvidiaVideo.SuperResolutionSetting() : null;
-                    if (setting > 0)
-                        want = $"@exo-upscale:d3d11vpp=scaling-mode=nvidia:scale={scale.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}";
-                    else if (scale >= 1.2 && !_upscaleOffNoted)
-                    {
-                        // Said once: the picture would gain from it, but the driver's switch is off (or can't be read).
-                        _upscaleOffNoted = true;
-                        _log.Write($"upscaling: RTX Video Super Resolution is {(setting == 0 ? "off" : "unreadable")} in the driver; mpv scales instead");
-                    }
-                }
-                if (want == _upscaleFilter) return;
-                if (_upscaleFilter.Length > 0) mpv.Command("vf", "remove", "@exo-upscale");
-                if (want.Length > 0 && mpv.Command("vf", "add", want) < 0) want = "";
-                _upscaleFilter = want;
-                _log.Write(want.Length > 0 ? $"upscaling: RTX Video Super Resolution, {height:0}p x{scale:0.##}" : "upscaling: off");
+                if (high) mpv.Command("apply-profile", "high-quality");
+                else foreach (var (name, value) in Balanced) mpv.Set(name, value);
+                _pictureHigh = high;
+                _log.Write($"picture: {(high ? "high quality" : "balanced")}{why}");
             }
-            catch (Exception e) { _log.Write($"upscaling: {e.Message}"); }
+            ApplyUpscaling(mpv);
+            // The player's readings say how the picture is drawn right now.
+            var said = (_pictureHigh ? "High quality" : "Balanced") + (_upscaleFilter.Length > 0 ? " · RTX Super Resolution" : "");
+            if (said == _pictureSaid) return;
+            _pictureSaid = said;
+            OnUi(() => Post(new { type = "picture", text = said }));
         }
+    }
+
+    private void ApplyUpscaling(MpvPlayer mpv)
+    {
+        try
+        {
+            static double Num(string? s) => double.TryParse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0;
+            var want = "";
+            double scale = 0;
+            var height = Num(mpv.Get("video-params/h"));
+            if (_pictureHigh && height > 0 && PlayerTuning.Vendor == "nvidia" && PlayerTuning.Gpu.Contains("RTX", StringComparison.OrdinalIgnoreCase)
+                && mpv.Get("hwdec-current") == "d3d11va" && mpv.Get("video-params/gamma") is not ("pq" or "hlg") && !GameRunning())
+            {
+                scale = Math.Min(4, Math.Max(Num(mpv.Get("display-height")), Num(mpv.Get("osd-height"))) / height);
+                var setting = scale >= 1.2 ? NvidiaVideo.SuperResolutionSetting() : null;
+                if (setting > 0)
+                    want = $"@exo-upscale:d3d11vpp=scaling-mode=nvidia:scale={scale.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}";
+                else if (scale >= 1.2 && !_upscaleOffNoted)
+                {
+                    // Said once: the picture would gain from it, but the driver's switch is off (or can't be read).
+                    _upscaleOffNoted = true;
+                    _log.Write($"upscaling: RTX Video Super Resolution is {(setting == 0 ? "off" : "unreadable")} in the driver; mpv scales instead");
+                }
+            }
+            if (want == _upscaleFilter) return;
+            if (_upscaleFilter.Length > 0) mpv.Command("vf", "remove", "@exo-upscale");
+            if (want.Length > 0 && mpv.Command("vf", "add", want) < 0) want = "";
+            _upscaleFilter = want;
+            _log.Write(want.Length > 0 ? $"upscaling: RTX Video Super Resolution, {height:0}p x{scale:0.##}" : "upscaling: off");
+        }
+        catch (Exception e) { _log.Write($"upscaling: {e.Message}"); }
     }
 
     // A game is running: Exo Launcher signals it with a named event while any library game runs (its
@@ -228,7 +249,10 @@ public sealed partial class MainWindow
     private Timer? _performance;
     private long _drops, _late;
 
-    private void WatchPerformance() => _performance ??= new Timer(_ => { LogPerformance(); ApplyUpscaling(); }, null, 60_000, 60_000);
+    private void WatchPerformance() => _performance ??= new Timer(_ => { LogPerformance(); ApplyPicture(); }, null, 60_000, 60_000);
+
+    // A minute with a frame dropped every second or so: lighter scalers for the rest of this video.
+    private const int DropsThatLighten = 60;
 
     private void LogPerformance()
     {
@@ -241,6 +265,11 @@ public sealed partial class MainWindow
             var (newDrops, newLate) = (drops - _drops, late - _late);
             (_drops, _late) = (drops, late);
             if (mpv.Get("pause") != "no" || mpv.Get("idle-active") == "yes") return;
+            if (_pictureHigh && newDrops >= DropsThatLighten && !_lighterForThisVideo)
+            {
+                _lighterForThisVideo = true;
+                ApplyPicture($" for this video, after {newDrops} dropped frames in a minute");
+            }
             var fps = double.TryParse(mpv.Get("container-fps"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var f) ? f : 0;
             _log.Write($"playing: {newDrops} dropped, {newLate} late in the last minute · {mpv.Get("hwdec-current")} · {mpv.Get("video-params/w")}x{mpv.Get("video-params/h")} {mpv.Get("video-format")} {mpv.Get("video-params/gamma")} · {fps:0.###} fps");
         }

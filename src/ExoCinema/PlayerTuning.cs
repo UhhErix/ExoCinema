@@ -67,7 +67,20 @@ internal static class PlayerTuning
         }
     }
 
-    public static object Describe() => new { gpu = Gpu, vendor = Vendor, profile = Strong ? "high-quality" : "default" };
+    /// <summary>Running on battery: the picture goes lighter (GetSystemPowerStatus; a desktop is always on mains).</summary>
+    public static bool OnBattery() => GetSystemPowerStatus(out var s) && s.ACLineStatus == 0;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SYSTEM_POWER_STATUS
+    {
+        public byte ACLineStatus, BatteryFlag, BatteryLifePercent, SystemStatusFlag;
+        public int BatteryLifeTime, BatteryFullLifeTime;
+    }
+
+    [DllImport("kernel32.dll")]
+    private static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS status);
+
+    public static object Describe() => new { gpu = Gpu, vendor = Vendor };
 
     private static string PrimaryAdapter()
     {
