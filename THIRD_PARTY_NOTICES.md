@@ -23,6 +23,7 @@ The library is zhongfly's LGPL build of libmpv, release `2026-10-28-dc4b285c93`,
 | Microsoft Edge WebView2 SDK | BSD-3-Clause, below | <https://www.nuget.org/packages/Microsoft.Web.WebView2> |
 | Tabler Icons, by Paweł Kuna | MIT, below | <https://github.com/tabler/tabler-icons> |
 | Inter, by Rasmus Andersson | SIL Open Font License 1.1 (`app\wwwroot\fonts\LICENSE-Inter.txt`) | <https://github.com/rsms/inter> |
+| ArtCNN shaders C4F32_DS and C4F16_DS, by João Chrisóstomo and Kacper Michajłow (changed only in when they run, marked `Exo_Supersample_`) | MIT (`app\Shaders\ArtCNN\LICENSE`) | <https://github.com/Artoriuz/ArtCNN> |
 
 The installer is made with NSIS (zlib/libpng license, <https://nsis.sourceforge.io>).
 

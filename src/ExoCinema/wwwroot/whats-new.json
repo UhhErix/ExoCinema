@@ -1,5 +1,35 @@
 [
   {
+    "version": "1.3.0",
+    "items": [
+      {
+        "icon": "Play",
+        "title": "See where you'd jump",
+        "detail": "Hover the seek bar for a picture of that moment. Drag as fast as you like: the bar, the time and the picture stay together."
+      },
+      {
+        "icon": "Glass",
+        "title": "Anime, sharper",
+        "detail": "ArtCNN redraws anime with crisp lines and real texture, at up to 4K and back to your screen."
+      },
+      {
+        "icon": "Library",
+        "title": "The best stream for you",
+        "detail": "Best ranks a stream add-on's streams by their details for your PC and connection. Ask lists them all."
+      },
+      {
+        "icon": "Tracks",
+        "title": "The right audio and subtitles",
+        "detail": "The best recording in the language you'd expect, Japanese for anime, with full subtitles in yours when you need them."
+      },
+      {
+        "icon": "Home",
+        "title": "Your poster in Windows",
+        "detail": "Windows' media controls and Exo Launcher's mini player show what's playing with its poster."
+      }
+    ]
+  },
+  {
     "version": "1.2.0",
     "items": [
       {

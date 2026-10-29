@@ -51,11 +51,43 @@ internal static class PlayerTuning
             ["cache-pause-wait"] = "3",
             ["stream-lavf-o"] = "reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=5",
         };
+        // Plain subtitles (SRT, WebVTT) in Exo's type, Inter, white with a dark edge and a soft shadow; styled ones (the
+        // ASS of most anime) keep the look they were made with, their own fonts included.
+        var fonts = Path.Combine(AppContext.BaseDirectory, "wwwroot", "fonts");
+        if (Directory.Exists(fonts))
+        {
+            o["sub-fonts-dir"] = fonts;
+            o["sub-font"] = "Inter Variable";
+        }
+        o["sub-bold"] = "yes";
+        o["sub-font-size"] = "40";
+        o["sub-border-size"] = "2.4";
+        o["sub-shadow-offset"] = "1.5";
+        o["sub-shadow-color"] = "#80000000";
+        // Compiled shaders are kept: libmpv has no folder of its own for them, so every start and every switch to the
+        // anime upscaler compiled from scratch (3 s with the picture frozen; 0.06 s from the cache).
+        try { Directory.CreateDirectory(Path.Combine(ShaderCache, "peek")); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+        o["gpu-shader-cache-dir"] = ShaderCache;
+        o["icc-cache-dir"] = ShaderCache;
         // The player's glass: mpv blurs the picture under the page's glass itself (MainWindow.Glass.cs).
         if (File.Exists(MainWindow.GlassShader)) o["glsl-shaders"] = MainWindow.GlassShader;
-        if (Strong) o["profile"] = "high-quality";
+        if (Strong)
+        {
+            o["profile"] = "high-quality";
+            o["dscale"] = HighDownscale;
+        }
         return o;
     }
+
+    /// <summary>
+    /// High quality's downscaler: Catmull-Rom, sharper than mpv's default (hermite) when a picture is shrunk, as a 4K
+    /// film on a 1080p screen or the anime upscaler's 2:1 is; hermite's softness cost what the upscaler had gained on
+    /// the picture bench. The high-quality profile sets only the upscaler.
+    /// </summary>
+    public const string HighDownscale = "catmull_rom";
+
+    /// <summary>Where mpv keeps the shaders it has compiled for this PC's graphics card.</summary>
+    public static string ShaderCache { get; } = Path.Combine(AppInfo.Data, "cache", "shaders");
 
     // The read-ahead buffer lives in memory: a minute and a half of a 4K remux on a 16 GB PC, half that on 8 GB.
     private static string CacheBytes

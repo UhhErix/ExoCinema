@@ -73,13 +73,48 @@ public sealed partial class MainWindow
         try
         {
             if (await _images.GetAsync(image) is not { } bytes || item != _mediaItem) return;
-            var stream = new InMemoryRandomAccessStream();
-            await stream.WriteAsync(bytes.AsBuffer());
-            stream.Seek(0);
-            shown.Thumbnail = RandomAccessStreamReference.CreateFromStream(stream);
+            var file = await CoverFileAsync(bytes, item);
+            if (item != _mediaItem) return;
+            shown.Thumbnail = RandomAccessStreamReference.CreateFromFile(await Windows.Storage.StorageFile.GetFileFromPathAsync(file));
             shown.Update();
         }
         catch (Exception e) { _log.Write($"media controls: {e.Message}"); }
+    }
+
+    /// <summary>
+    /// The cover as Windows' media session hands it on (to its flyout, Exo Launcher's mini player): a JPEG file at most
+    /// 480 px tall. A stream in memory came out empty for readers in other processes, and the server may send WebP or
+    /// AVIF, which not every reader decodes. One file per title, the last one removed.
+    /// </summary>
+    private static async Task<string> CoverFileAsync(byte[] bytes, int item)
+    {
+        var dir = Path.Combine(AppInfo.Data, "cache");
+        Directory.CreateDirectory(dir);
+        foreach (var old in Directory.EnumerateFiles(dir, "now-playing-*.jpg")) try { File.Delete(old); } catch (IOException) { }
+        using var input = new InMemoryRandomAccessStream();
+        await input.WriteAsync(bytes.AsBuffer());
+        input.Seek(0);
+        var decoder = await Windows.Graphics.Imaging.BitmapDecoder.CreateAsync(input);
+        var scale = Math.Min(1, 480.0 / decoder.PixelHeight);
+        var transform = new Windows.Graphics.Imaging.BitmapTransform
+        {
+            ScaledWidth = (uint)Math.Max(1, Math.Round(decoder.PixelWidth * scale)),
+            ScaledHeight = (uint)Math.Max(1, Math.Round(decoder.PixelHeight * scale)),
+            InterpolationMode = Windows.Graphics.Imaging.BitmapInterpolationMode.Fant,
+        };
+        var pixels = await decoder.GetPixelDataAsync(Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8, Windows.Graphics.Imaging.BitmapAlphaMode.Ignore,
+            transform, Windows.Graphics.Imaging.ExifOrientationMode.RespectExifOrientation, Windows.Graphics.Imaging.ColorManagementMode.ColorManageToSRgb);
+        using var output = new InMemoryRandomAccessStream();
+        var quality = new Windows.Graphics.Imaging.BitmapPropertySet { ["ImageQuality"] = new Windows.Graphics.Imaging.BitmapTypedValue(0.9f, Windows.Foundation.PropertyType.Single) };
+        var encoder = await Windows.Graphics.Imaging.BitmapEncoder.CreateAsync(Windows.Graphics.Imaging.BitmapEncoder.JpegEncoderId, output, quality);
+        encoder.SetPixelData(Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8, Windows.Graphics.Imaging.BitmapAlphaMode.Ignore,
+            transform.ScaledWidth, transform.ScaledHeight, 96, 96, pixels.DetachPixelData());
+        await encoder.FlushAsync();
+        var jpeg = new byte[output.Size];
+        using (var read = output.GetInputStreamAt(0).AsStreamForRead()) read.ReadExactly(jpeg);
+        var path = Path.Combine(dir, $"now-playing-{item}.jpg");
+        await File.WriteAllBytesAsync(path, jpeg);
+        return path;
     }
 
     private void OnMediaButton(SystemMediaTransportControlsButton button)

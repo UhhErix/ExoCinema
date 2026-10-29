@@ -55,8 +55,8 @@ public sealed partial class MainWindow : Window, IPlayerSurface
             if (e.WindowActivationState == WindowActivationState.Deactivated || _controller is null) return;
             SendXamlToBack();
             try { _controller.MoveFocus(CoreWebView2MoveFocusReason.Programmatic); } catch (COMException) { }
-            // A full-screen change asked for while in the background happens now (MainWindow.Player.cs).
-            if (_pendingFullScreen is { } pending) DispatcherQueue.TryEnqueue(() => SetFullScreen(pending));
+            // Left full screen in the background from a maximized window: maximized again now (MainWindow.Player.cs).
+            DispatcherQueue.TryEnqueue(MaximizeIfWaiting);
         };
         AppWindow.Changed += (_, e) =>
         {
@@ -136,9 +136,13 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         {
             try { if (ShortcutIdentity.Stamp() is > 0 and var n) _log.Write($"shortcuts: app ID set on {n}"); }
             catch (Exception e) { _log.Write($"shortcuts: {e.Message}"); }
+            try { if (InstalledAppsEntry.Refresh() is > 0 and var n) _log.Write($"installed apps: {n} values brought up to date"); }
+            catch (Exception e) { _log.Write($"installed apps: {e.Message}"); }
         });
         if (_launch.FullScreen) SetFullScreen(true);
         if (_launch.Media is { } media && TryStartMpv()) Play(media, null, 0, null);
+        // The anime upscaler's shaders, compiled ahead once the app has settled (MainWindow.Player.cs).
+        _ = Task.Delay(20_000).ContinueWith(_ => OnUi(StartWarmup));
     }
 
     // mpv can't load while the graphics driver is being installed (its Vulkan loader is gone for a minute or two):
@@ -163,6 +167,8 @@ public sealed partial class MainWindow : Window, IPlayerSurface
 
     private void StartMpv()
     {
+        // Whether this player's shader cache already holds the anime upscaler (it is read once, as mpv starts).
+        _mpvWarm = ShaderWarmup.Ready(AnimeShaderFiles);
         _mpv = new MpvPlayer(_hwnd, PlayerTuning.Options());
         _mpv.Log += OnMpvLog;
         foreach (var (name, format) in ObservedProperties) _mpv.Observe(name, format);
@@ -205,6 +211,12 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         core.SetVirtualHostNameToFolderMapping("cinema.exo", Path.Combine(AppContext.BaseDirectory, "wwwroot"), CoreWebView2HostResourceAccessKind.Deny);
         core.WebMessageReceived += OnWebMessage;
         _images = new ImageCache(core, env);
+        // Jellyfin's scrub pictures need the sign-in: it goes in the request's header, never in a URL the page holds.
+        core.AddWebResourceRequestedFilter("*/Trickplay/*", CoreWebView2WebResourceContext.Image);
+        core.WebResourceRequested += (_, e) =>
+        {
+            if (_jellyfin.TrickplayAuth(e.Request.Uri) is { } auth) e.Request.Headers.SetHeader("Authorization", auth);
+        };
         core.ContainsFullScreenElementChanged += (_, _) => SetFullScreen(core.ContainsFullScreenElement);
         var ready = new TaskCompletionSource();
         core.NavigationCompleted += (_, _) => ready.TrySetResult();
@@ -257,6 +269,12 @@ public sealed partial class MainWindow : Window, IPlayerSurface
                 break;
             case "glass":
                 SetGlass(msg);
+                break;
+            case "peek":
+                Peek(msg);
+                break;
+            case "anime":
+                SetAnime((bool?)msg["on"] == true);
                 break;
             case "media":
                 SetMedia(msg);
@@ -362,6 +380,7 @@ public sealed partial class MainWindow : Window, IPlayerSurface
         _upscaleRecheck?.Dispose();
         if (_media != null) _media.IsEnabled = false;
         SaveWindowPlacement();
+        _peek?.Dispose();
         _mpv?.Dispose();
         _mpv = null;
         _captionOverlay?.Dispose();

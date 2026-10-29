@@ -35,8 +35,8 @@
     <AssemblyName>ExoCinema</AssemblyName>
     <Product>Exo Cinema</Product>
     <AssemblyTitle>Exo Cinema</AssemblyTitle>
-    <Company>UhhErix</Company>
-    <Copyright>© 2026 Erix (UhhErix)</Copyright>
+    <Company>Exo</Company>
+    <Copyright>Copyright (c) 2026 Erix (UhhErix)</Copyright>
     <Description>Everything you watch, in one quiet place.</Description>
     <!-- One version for the app, Setup and the release: the repository's VERSION file. -->
     <Version>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\..\VERSION').Trim())</Version>

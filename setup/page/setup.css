@@ -11,8 +11,11 @@
   src: url("fonts/InterVariable.woff2") format("woff2");
 }
 
-/* What glass.css leaves to app.css or doesn't carry: Exo's durations, its spring, the good green and a row's radius. */
+/* What glass.css leaves to app.css or doesn't carry: Exo's curves and durations (as app.css, from Exo Launcher's
+   tokens.css; without --ease-out every transition here was invalid, so nothing in Setup moved), the good green and a
+   row's radius. .claude/css-vars-check.py lists any token used here that nothing defines. */
 :root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --color-good: #3dd68c;
   --dur-press: 90ms;
   --dur-quick: 120ms;

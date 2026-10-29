@@ -218,20 +218,52 @@ input[type="range"].is-compact:is(:hover, :focus-visible, :active)::-webkit-slid
 
 .scrub:hover .thumb, .scrub.is-dragging .thumb { scale: 1; }
 
-.hover-time {
+/* The time under the pointer, over the picture at that time when there is one (player.js › drawPeek). It moves with
+   the pointer at the page's own pace, so its glass is the page's: mpv's blur is redrawn with the video's frames and
+   trailed behind it. */
+.hover-peek {
   position: absolute;
   bottom: 40px;
-  translate: -50% 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   padding: 4px 8px;
   border-radius: 8px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-base) var(--ease-out);
 }
 
-.scrub:hover .hover-time { opacity: 1; }
+#stage .hover-peek { background-color: var(--glassy-still-control); }
+:root[data-material="solid"] #stage .hover-peek { background-color: #121212; }
+
+.scrub:hover .hover-peek, .scrub.is-dragging .hover-peek { opacity: 1; }
+
+.hover-peek.has-picture {
+  padding: 4px 4px 6px;
+  border-radius: 14px;
+}
+
+.peek-frame {
+  display: none;
+  width: var(--peek-w);
+  height: var(--peek-h);
+  border-radius: 10px;
+  background-color: #000;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.hover-peek.has-picture .peek-frame { display: block; }
+
+.peek-time {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hover-peek.has-picture .peek-time { font-size: 13px; font-weight: 600; }
 
 /* Chrome leaves while the picture plays and the pointer rests. */
 :is(.top, .controls) {

@@ -94,7 +94,20 @@ public sealed partial class MainWindow
     /// Region rects are physical client pixels; the page's rects are CSS pixels (DIPs).
     private void UpdateCaptionDragRegions()
     {
-        if (_fullScreen) { _captionOverlay?.Clear(); return; }
+        if (_fullScreen)
+        {
+            // A full-screen window has no caption: nothing drags it, snaps it or maximizes it.
+            _captionOverlay?.Clear();
+            try
+            {
+                var input = _captionInput ?? InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+                input.ClearRegionRects(NonClientRegionKind.Caption);
+                input.ClearRegionRects(NonClientRegionKind.Maximize);
+                input.ClearRegionRects(NonClientRegionKind.Passthrough);
+            }
+            catch { }
+            return;
+        }
         try
         {
             var scale = GetWindowScale();

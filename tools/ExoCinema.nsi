@@ -25,8 +25,11 @@
 !endif
 
 !define PRODUCT_NAME "Exo Cinema"
-!define PRODUCT_PUBLISHER "UhhErix"
-!define PRODUCT_WEB "https://github.com/UhhErix/ExoCinema"
+; Who made it, as all three Exo apps say it in Installed apps: the family publishes, the owner holds the copyright.
+!define PRODUCT_PUBLISHER "Exo"
+!define PRODUCT_COPYRIGHT "Copyright (c) 2026 Erix (UhhErix)"
+!define PRODUCT_WEB "https://getexo.app/cinema"
+!define PRODUCT_HELP "https://discord.gg/44mXWhaHP4"
 !ifdef EXO_TEST_ROOT
   ; A walk-through build (/DEXO_TEST_ROOT=<folder>): installs under that folder with its own registry entries and
   ; shortcut names, never over the real Exo Cinema.
@@ -70,7 +73,7 @@ VIAddVersionKey /LANG=1033 "CompanyName" "${PRODUCT_PUBLISHER}"
 VIAddVersionKey /LANG=1033 "FileDescription" "${PRODUCT_NAME} install engine"
 VIAddVersionKey /LANG=1033 "FileVersion" "${PRODUCT_VERSION}"
 VIAddVersionKey /LANG=1033 "ProductVersion" "${PRODUCT_VERSION}"
-VIAddVersionKey /LANG=1033 "LegalCopyright" "Copyright (c) 2026 ${PRODUCT_PUBLISHER}"
+VIAddVersionKey /LANG=1033 "LegalCopyright" "${PRODUCT_COPYRIGHT}"
 
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
@@ -425,6 +428,8 @@ Section "Exo Cinema" SecApp
   WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB}"
+  WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "URLUpdateInfo" "${PRODUCT_WEB}"
+  WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "HelpLink" "${PRODUCT_HELP}"
   WriteRegStr HKCU "${PRODUCT_UNINST_KEY}" "InstallLocation" "$INSTDIR"
   WriteRegDWORD HKCU "${PRODUCT_UNINST_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${PRODUCT_UNINST_KEY}" "NoRepair" 1

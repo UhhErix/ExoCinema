@@ -51,7 +51,7 @@ function drawOb(n, dir) {
       cta.textContent = 'Continue'
       break
     case 'look':
-      step.innerHTML = `${title('Your look')}<div class="ob-body"><div class="exo-glass is-panel set-group">${prefRow('material')}</div></div>`
+      step.innerHTML = `${title('Your look')}<div class="ob-body"><div class="exo-glass is-panel set-group">${prefRow('material')}${prefRow('motion')}</div></div>`
       cta.textContent = 'Start watching'
       break
   }

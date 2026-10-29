@@ -97,7 +97,7 @@ internal sealed class JellyfinHost(IPlayerSurface player)
             "search" => await SearchAsync(client, (string)args!["term"]!),
             "played" => await SetPlayedAsync(client, (string)args!["id"]!, (bool)args["played"]!),
             "play" => await PlayAsync(client, (string)args!["id"]!, (bool?)args["resume"] ?? true, (string?)args["addon"], (string?)args["source"]),
-            "sources" => await SourcesAsync(client, (string)args!["id"]!),
+            "sources" => await SourcesAsync(client, (string)args!["id"]!, (string?)args["addon"]),
             "stop" => await StopAsync(),
             "segments" => await SegmentsAsync(client, (string)args!["id"]!),
             "next" => await NextEpisodeAsync(client, (string)args!["id"]!),
@@ -210,10 +210,15 @@ internal sealed class JellyfinHost(IPlayerSurface player)
         var generation = ++_playGeneration;
         await StopReportingAsync();
         var item = await c.ItemAsync(id);
+        // An episode carries little of its show's own (its genres, where it was made): those come from the series, read
+        // alongside, for the player to tell anime (playerplus.js).
+        var series = (string?)item["Type"] == "Episode" && (string?)item["SeriesId"] is { } seriesId ? SeriesAsync(c, seriesId) : Task.FromResult<JsonNode?>(null);
         var startTicks = resume ? (long?)item["UserData"]?["PlaybackPositionTicks"] ?? 0 : 0;
         var info = await c.PlaybackInfoAsync(id, startTicks);
         // The version picked in the source sheet, or the best one for this PC.
         var sources = (info["MediaSources"] as JsonArray ?? []).OfType<JsonNode>().ToList();
+        // A stream of the add-on's picked in the sheet ("addon:" and its place in the list) stands for the one source.
+        var pickedStream = sourceId?.StartsWith("addon:") == true && int.TryParse(sourceId[6..], out var n) ? n : (int?)null;
         var source = sources.FirstOrDefault(s => sourceId != null && (string?)s["Id"] == sourceId) ?? Ranked(sources).FirstOrDefault()
             ?? throw new JellyfinException("The server has no file for this item.");
         var direct = (bool?)source["SupportsDirectPlay"] == true || (bool?)source["SupportsDirectStream"] == true;
@@ -222,7 +227,7 @@ internal sealed class JellyfinHost(IPlayerSurface player)
         {
             // The server's stored link was minted on its own connection; a stream add-on answers with
             // one made for this PC, which a requester-tied host accepts. Try it before the stored link.
-            if (await AddonUrlAsync(c, item, addonUrl) is { } own) url = own;
+            if (await AddonUrlAsync(c, item, addonUrl, pickedStream) is { } own) url = own;
             else
             {
                 // A refused remote link plays back as a short notice video, which mpv would treat as the show. Peek first.
@@ -260,25 +265,63 @@ internal sealed class JellyfinHost(IPlayerSurface player)
         // A transcode already starts at StartTimeTicks; only direct play seeks in mpv.
         // The token goes only to this server, never to another address a source points at.
         player.Play(url, c.IsOwnUrl(url) ? c.AuthHeader : null, direct ? startTicks / 1e7 : 0, Title(item));
-        return new JsonObject { ["item"] = item.DeepClone(), ["playMethod"] = _now.PlayMethod, ["start"] = startTicks / 1e7 };
+        var shown = item.DeepClone();
+        if (await series is { } show)
+        {
+            shown["SeriesGenres"] = show["Genres"]?.DeepClone();
+            shown["SeriesProductionLocations"] = show["ProductionLocations"]?.DeepClone();
+            shown["SeriesOriginalTitle"] = show["OriginalTitle"]?.DeepClone();
+        }
+        return new JsonObject { ["item"] = shown, ["playMethod"] = _now.PlayMethod, ["start"] = startTicks / 1e7, ["mediaSourceId"] = _now.MediaSourceId };
+    }
+
+    private static async Task<JsonNode?> SeriesAsync(JellyfinClient c, string seriesId)
+    {
+        try { return await c.ItemAsync(seriesId); }
+        catch (JellyfinException) { return null; }
     }
 
     /// <summary>
-    /// The add-on's own link for this item, the first one that is not refused — made for this PC's
-    /// connection, unlike the server's stored copy. Null without an add-on or a usable answer.
+    /// The add-on's own link for this item — made for this PC's connection, unlike the server's stored copy: the one
+    /// picked in the source sheet, else the best for this PC (StreamChoice.Rank), else the next best, the first one
+    /// that is not refused. Null without an add-on or a usable answer.
     /// </summary>
-    private async Task<string?> AddonUrlAsync(JellyfinClient c, JsonNode item, string? addonUrl)
+    private async Task<string?> AddonUrlAsync(JellyfinClient c, JsonNode item, string? addonUrl, int? picked)
     {
-        if (AddonClient.From(addonUrl) is not { } addon || await StreamIdAsync(c, item) is not { } sid) return null;
         try
         {
-            foreach (var u in await addon.StreamsAsync(sid.Type, sid.Id))
-                if (await c.ProbeRemoteAsync(u) is { Notice: null } p) return p.Target ?? u;
+            if (await AddonChoicesAsync(c, item, addonUrl) is not { Count: > 0 } choices) return null;
+            if (picked is { } i && i >= 0 && i < choices.Count) choices = [choices[i], .. choices.Where((_, k) => k != i)];
+            foreach (var s in choices)
+                if (await c.ProbeRemoteAsync(s.Url) is { Notice: null } p)
+                {
+                    Log?.Invoke($"addon: {Describe(s)}");
+                    return p.Target ?? s.Url;
+                }
             Log?.Invoke("addon: every link was refused");
         }
         catch (Exception e) { Log?.Invoke($"addon: {e.Message}"); }
         return null;
     }
+
+    // The add-on's streams for the item last asked about, best first, so the sheet's numbers mean the same at play.
+    private (string ItemId, List<StreamChoice> Choices)? _addonChoices;
+
+    private async Task<List<StreamChoice>?> AddonChoicesAsync(JellyfinClient c, JsonNode item, string? addonUrl)
+    {
+        var id = (string?)item["Id"] ?? "";
+        if (_addonChoices is { } kept && kept.ItemId == id) return kept.Choices;
+        if (AddonClient.From(addonUrl) is not { } addon || await StreamIdAsync(c, item) is not { } sid) return null;
+        var list = await addon.StreamListAsync(sid.Type, sid.Id);
+        var seconds = ((long?)item["RunTimeTicks"] ?? 0) / 1e7;
+        var ranked = StreamChoice.Rank(list.Select(StreamChoice.From), seconds, LinkSpeed.Mbps, PlayerTuning.Strong);
+        _addonChoices = (id, ranked);
+        return ranked;
+    }
+
+    // What was picked, for app.log: the stream's qualities, never its address.
+    private static string Describe(StreamChoice s) =>
+        string.Join(" ", new[] { s.Height > 0 ? $"{s.Height}p" : "?p", s.Range, s.Codec, s.Source, s.Audio, s.Size is { } b ? $"{b / 1e9:0.0} GB" : null }.Where(x => x != null));
 
     /// <summary>The stream-catalog id for this item: a movie's imdb, or a series' imdb with season and episode.</summary>
     private static async Task<(string Type, string Id)?> StreamIdAsync(JellyfinClient c, JsonNode item)
@@ -344,11 +387,43 @@ internal sealed class JellyfinHost(IPlayerSurface player)
         return list is { Count: > 1 } ? list[1]!.DeepClone() : null;
     }
 
-    /// <summary>An item's versions, best for this PC first, as the source sheet lists them.</summary>
-    private static async Task<JsonNode> SourcesAsync(JellyfinClient c, string id)
+    /// <summary>
+    /// An item's versions, best for this PC first, as the source sheet lists them. A title whose one version is a stream
+    /// add-on's link lists the add-on's streams instead: those are its real versions.
+    /// </summary>
+    private async Task<JsonNode> SourcesAsync(JellyfinClient c, string id, string? addonUrl)
     {
         var info = await c.PlaybackInfoAsync(id, 0);
         var sources = (info["MediaSources"] as JsonArray ?? []).OfType<JsonNode>().ToList();
+        if (sources is [var only] && (bool?)only["IsRemote"] == true && (string?)only["Protocol"] == "Http" && addonUrl != null)
+        {
+            _addonChoices = null;
+            try
+            {
+                var item = await c.ItemAsync(id);
+                if (await AddonChoicesAsync(c, item, addonUrl) is { Count: > 1 } choices)
+                {
+                    var seconds = ((long?)item["RunTimeTicks"] ?? 0) / 1e7;
+                    return new JsonArray(choices.Select((s, i) => (JsonNode)new JsonObject
+                    {
+                        ["id"] = $"addon:{i}",
+                        ["name"] = s.Label,
+                        ["best"] = i == 0,
+                        ["direct"] = true,
+                        ["size"] = s.Size,
+                        ["bitrate"] = s.Mbps(seconds) is { } mbps ? (long)(mbps * 1e6) : null,
+                        ["height"] = s.Height > 0 ? s.Height : null,
+                        ["videoCodec"] = s.Codec,
+                        ["range"] = s.Range switch { "Dolby Vision" => "DOVI", "HDR10+" => "HDR10Plus", "HDR10" => "HDR10", _ => null },
+                        ["audioCodec"] = s.Audio switch { "Atmos" => "atmos", "TrueHD" => "truehd", "DTS-HD" => "dtshd", "DTS" => "dts", "E-AC-3" => "eac3", "AC-3" => "ac3", "AAC" => "aac", _ => null },
+                        ["channels"] = s.Channels > 0 ? s.Channels : null,
+                        ["origin"] = s.Source,
+                        ["notReady"] = s.Cached == false,
+                    }).ToArray());
+                }
+            }
+            catch (Exception e) { Log?.Invoke($"addon: {e.Message}"); }
+        }
         return new JsonArray(Ranked(sources).Select((s, i) => (JsonNode)Describe(s, i == 0)).ToArray());
     }
 
@@ -468,6 +543,10 @@ internal sealed class JellyfinHost(IPlayerSurface player)
 
     /// <summary>The signed-in server's address, or null when signed out.</summary>
     public string? Server => _client?.Server;
+
+    /// <summary>The sign-in for a request to this server's scrub pictures (trickplay tiles); null for anything else.</summary>
+    public string? TrickplayAuth(string url) =>
+        _client is { } c && c.IsOwnUrl(url) && new Uri(url).AbsolutePath.Contains("/Trickplay/", StringComparison.OrdinalIgnoreCase) ? c.AuthHeader : null;
 
     public event Action<string>? ReportFailed;
     public event Action<string>? Log;

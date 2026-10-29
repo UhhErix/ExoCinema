@@ -12,6 +12,9 @@ internal sealed unsafe class MpvPlayer : IDisposable
     private IntPtr _ctx;
     private readonly Thread _events;
     private volatile bool _closing;
+    // Calls from any thread share the handle; Dispose waits for those under way and turns later ones into no-ops, so a
+    // player started again (MainWindow.RestartMpv) never has a timer or the glass call into one being destroyed.
+    private readonly ReaderWriterLockSlim _use = new(LockRecursionPolicy.SupportsRecursion);
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly List<string> _observed = [];
 
@@ -52,24 +55,38 @@ internal sealed unsafe class MpvPlayer : IDisposable
     public int Command(params string[] args)
     {
         var ptrs = new IntPtr[args.Length + 1];
+        _use.EnterReadLock();
         try
         {
+            if (_ctx == IntPtr.Zero) return -1;
             for (var i = 0; i < args.Length; i++) ptrs[i] = Marshal.StringToCoTaskMemUTF8(args[i]);
             fixed (IntPtr* p = ptrs) return MpvNative.Command(_ctx, p);
         }
         finally
         {
+            _use.ExitReadLock();
             foreach (var p in ptrs) if (p != IntPtr.Zero) Marshal.FreeCoTaskMem(p);
         }
     }
 
-    public int Set(string name, string value) => MpvNative.SetPropertyString(_ctx, name, value);
+    public int Set(string name, string value)
+    {
+        _use.EnterReadLock();
+        try { return _ctx == IntPtr.Zero ? -1 : MpvNative.SetPropertyString(_ctx, name, value); }
+        finally { _use.ExitReadLock(); }
+    }
 
     public string? Get(string name)
     {
-        var p = MpvNative.GetPropertyString(_ctx, name);
-        if (p == IntPtr.Zero) return null;
-        try { return MpvNative.Utf8(p); } finally { MpvNative.Free(p); }
+        _use.EnterReadLock();
+        try
+        {
+            if (_ctx == IntPtr.Zero) return null;
+            var p = MpvNative.GetPropertyString(_ctx, name);
+            if (p == IntPtr.Zero) return null;
+            try { return MpvNative.Utf8(p); } finally { MpvNative.Free(p); }
+        }
+        finally { _use.ExitReadLock(); }
     }
 
     private void EventLoop()
@@ -150,8 +167,14 @@ internal sealed unsafe class MpvPlayer : IDisposable
         _closing = true;
         MpvNative.Wakeup(_ctx);
         _events.Join(2000);
-        var ctx = _ctx;
-        _ctx = IntPtr.Zero;
+        IntPtr ctx;
+        _use.EnterWriteLock();
+        try
+        {
+            ctx = _ctx;
+            _ctx = IntPtr.Zero;
+        }
+        finally { _use.ExitWriteLock(); }
         MpvNative.TerminateDestroy(ctx);
     }
 }

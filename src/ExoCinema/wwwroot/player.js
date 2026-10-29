@@ -160,7 +160,10 @@ function placeGlass(ms = 450) {
   requestAnimationFrame(step)
 }
 
-new ResizeObserver(() => placeGlass()).observe(document.documentElement)
+// Each glass shape follows its own size too: a longer title or a menu filling in changes it with nothing else moving.
+const glassSizes = new ResizeObserver(() => placeGlass())
+glassSizes.observe(document.documentElement)
+for (const el of document.querySelectorAll('[data-over-video]')) glassSizes.observe(el)
 for (const type of ['transitionrun', 'animationstart']) stage.addEventListener(type, () => placeGlass())
 
 window.chrome.webview.addEventListener('message', ({ data: msg }) => {
@@ -189,6 +192,8 @@ window.chrome.webview.addEventListener('message', ({ data: msg }) => {
           break
         case 'duration': state.duration = msg.value || 0; break
         case 'time-pos':
+          // A seek still held with nothing on its way (one that landed off its mark): the bar follows mpv again.
+          if (state.seekTarget != null && !state.props.seeking && !state.loading && performance.now() - (state.restartAt ?? 0) > 2000 && performance.now() - state.seekAt > 2000) settleSeek()
           if (msg.value != null && state.seekTarget == null) { state.time = msg.value; state.timeAt = performance.now() }
           break
         case 'demuxer-cache-time': state.cache = msg.value || 0; break
@@ -219,15 +224,20 @@ window.chrome.webview.addEventListener('message', ({ data: msg }) => {
     case 'event':
       if (msg.name === 'start-file') { state.loading = true; delete state.timings.seek; drawSpinner() }
       if (msg.name === 'playback-restart') {
-        // Loaded or a seek landed: the bar follows mpv again from here.
+        // Loaded or a seek landed: the bar follows mpv again from here. Seeks sent in a row (a fast scrub, keys held)
+        // can land one by one; one that lands away from the latest target is an earlier one, and the bar holds the
+        // latest until it lands too, instead of jumping back and forth.
         state.loading = false
-        state.seekTarget = null
+        state.restartAt = performance.now()
+        const pos = msg.data?.pos
+        if (state.seekTarget != null && state.seeksOut > 1 && pos != null && Math.abs(pos - state.seekTarget) > 1) state.seeksOut--
+        else settleSeek()
         drawSpinner()
         send({ cmd: 'get', name: 'pause' })
       }
       if (msg.name === 'end-file') {
         state.loading = false
-        state.seekTarget = null
+        settleSeek()
         drawSpinner()
         if (msg.data?.error && inPlayer()) streamFailed(`The stream couldn't be played: ${msg.data.error}.`)
       }
@@ -253,9 +263,11 @@ function enterPlayer(playMethod) {
   state.duration = 0
   state.cache = 0
   state.seekTarget = null
+  state.seeksOut = 0
   state.loading = true
   for (const k of ['eof-reached', 'seeking', 'paused-for-cache', 'core-idle']) state.props[k] = false
   document.body.classList.replace('mode-app', 'mode-player')
+  resetPeek()
   enteredAt = performance.now()
   wake()
   placeGlass()
@@ -267,6 +279,7 @@ function leavePlayer() {
   state.fullscreenByPlayer = false
   state.loading = false
   state.seekTarget = null
+  state.seeksOut = 0
   clearTimeout(spinnerTimer)
   $('spinner').hidden = true
   document.body.classList.replace('mode-player', 'mode-app')
@@ -353,10 +366,18 @@ stage.addEventListener('dblclick', (e) => {
 function seekTo(seconds, mode = 'absolute+exact') {
   const to = Math.max(0, Math.min(state.duration || Infinity, seconds))
   state.seekTarget = to
+  state.seeksOut = (state.seeksOut ?? 0) + 1
+  state.seekAt = performance.now()
   state.time = to
   state.timeAt = performance.now()
   send({ cmd: 'seek', to, mode })
   redraw()
+}
+
+function settleSeek() {
+  if (state.seekTarget != null) { state.time = state.seekTarget; state.timeAt = performance.now() }
+  state.seekTarget = null
+  state.seeksOut = 0
 }
 
 // Relative seeks go as absolute ones from where the bar is, so presses in a row add up from what is shown.
@@ -372,15 +393,18 @@ const ratioAt = (x) => {
   const r = scrubRect ??= scrub.getBoundingClientRect()
   return Math.max(0, Math.min(1, (x - r.left) / r.width))
 }
-scrub.addEventListener('pointerenter', () => { scrubRect = null })
+scrub.addEventListener('pointerenter', (e) => {
+  scrubRect = null
+  // A picture from somewhere else on the bar doesn't show before the one for here.
+  peek.shown = null
+  $('hoverPeek').classList.remove('has-picture')
+  drawPeek(e.clientX)
+})
 
+// The bar, the time and the picture move together, in the same frame as the pointer: nothing waits on mpv.
 scrub.addEventListener('pointermove', (e) => {
-  const tip = $('hoverTime')
-  const ratio = ratioAt(e.clientX)
-  tip.textContent = fmt(ratio * state.duration)
-  tip.style.left = `${ratio * 100}%`
-  if (state.dragging) state.dragTime = ratio * state.duration
-  placeGlass(100)
+  if (state.dragging) { state.dragTime = ratioAt(e.clientX) * state.duration; redraw() }
+  drawPeek(e.clientX)
 })
 scrub.addEventListener('pointerdown', (e) => {
   scrubRect = null
@@ -388,14 +412,132 @@ scrub.addEventListener('pointerdown', (e) => {
   state.dragging = true
   state.dragTime = ratioAt(e.clientX) * state.duration
   scrub.classList.add('is-dragging')
+  drawPeek(e.clientX)
   redraw()
 })
-scrub.addEventListener('pointerup', (e) => {
+// Exact on release: the frame the user let go on, not the keyframe before it. A drag the window loses (it went to the
+// back mid-drag) ends where it was.
+const endDrag = (time) => {
   if (!state.dragging) return
   state.dragging = false
   scrub.classList.remove('is-dragging')
-  // Exact on release: the frame the user let go on, not the keyframe before it.
-  seekTo(ratioAt(e.clientX) * state.duration, 'absolute+exact')
+  seekTo(time, 'absolute+exact')
+}
+scrub.addEventListener('pointerup', (e) => endDrag(ratioAt(e.clientX) * state.duration))
+scrub.addEventListener('lostpointercapture', () => endDrag(state.dragTime))
+
+// ── The picture under the pointer ──────────────────────────────────────────────────────────────────────────────
+// Jellyfin's own scrub pictures (its trickplay tiles) when the server made them for this version; otherwise the host
+// draws the frame at that time with a second, hidden mpv (FramePeek.cs), except for a server conversion, where each
+// picture would start another one. Pictures are kept per step along the bar (a tenth of a second of bar per pixel
+// at most), the latest 150 of them.
+const peek = { tiles: null, cache: new Map(), shown: null, asked: null, none: false, hovered: null, video: 0 }
+const PEEK_KEEP = 150
+
+// The picture's size: about a seventh of the window's width, in the video's shape.
+function peekSize() {
+  const w = Math.round(Math.min(304, Math.max(176, innerWidth * 0.15)))
+  const vw = peek.tiles?.Width ?? state.props['video-params/w'], vh = peek.tiles?.Height ?? state.props['video-params/h']
+  const aspect = vw > 0 && vh > 0 ? Math.min(2.4, Math.max(4 / 3, vw / vh)) : 16 / 9
+  return { w, h: Math.round(w / aspect) }
+}
+
+// The step pictures are kept at: about 600 along the video, never finer than a second.
+const peekStep = () => Math.max(1, Math.round(state.duration / 600))
+
+// The Jellyfin item that is playing and the version picked (app.js): its tiles, at the width nearest the picture's.
+function peekFrom(item, sourceId, server) {
+  const sets = item?.Trickplay?.[sourceId] ?? Object.values(item?.Trickplay ?? {})[0]
+  const widths = Object.keys(sets ?? {}).map(Number).filter((w) => sets[w]?.ThumbnailCount > 0).sort((a, b) => a - b)
+  if (!widths.length) { peek.tiles = null; return }
+  const want = peekSize().w * devicePixelRatio
+  const width = widths.find((w) => w >= want) ?? widths.at(-1)
+  const q = sourceId ? `?mediaSourceId=${encodeURIComponent(sourceId)}` : ''
+  peek.tiles = { ...sets[width], src: (i) => `${server}/Videos/${item.Id}/Trickplay/${width}/${i}.jpg${q}` }
+}
+
+function resetPeek() {
+  peek.video++
+  peek.tiles = null
+  peek.cache.clear()
+  peek.shown = peek.asked = peek.hovered = null
+  peek.none = false
+  $('hoverPeek').classList.remove('has-picture')
+}
+
+function drawPeek(clientX) {
+  const box = $('hoverPeek')
+  const ratio = ratioAt(clientX)
+  const t = ratio * state.duration
+  const text = fmt(t)
+  if ($('hoverTime').textContent !== text) $('hoverTime').textContent = text
+  const size = peekSize()
+  if (state.duration > 0) showPeekAt(t, size)
+  // Centred on the pointer, kept inside the window.
+  const r = scrubRect ??= scrub.getBoundingClientRect()
+  const half = box.classList.contains('has-picture') ? size.w / 2 + 4 : 30
+  const x = Math.max(half + 8, Math.min(innerWidth - half - 8, r.left + ratio * r.width)) - r.left
+  box.style.translate = `calc(${x}px - 50%) 0`
+}
+
+function showPeekAt(t, size) {
+  const frame = $('peekFrame')
+  frame.style.setProperty('--peek-w', `${size.w}px`)
+  frame.style.setProperty('--peek-h', `${size.h}px`)
+  const tiles = peek.tiles
+  if (tiles) {
+    // The thumbnail's place in its tile: TileWidth across, read row by row; the last tile has only the rows it needs.
+    const perTile = tiles.TileWidth * tiles.TileHeight
+    const i = Math.min(tiles.ThumbnailCount - 1, Math.floor(t * 1000 / tiles.Interval))
+    const tile = Math.floor(i / perTile), at = i % perTile
+    const rows = Math.ceil(Math.min(perTile, tiles.ThumbnailCount - tile * perTile) / tiles.TileWidth)
+    const key = `${tile}:${at}`
+    if (peek.shown !== key) {
+      peek.shown = key
+      frame.style.backgroundImage = `url("${tiles.src(tile)}")`
+      frame.style.backgroundSize = `${tiles.TileWidth * size.w}px ${rows * size.h}px`
+      frame.style.backgroundPosition = `${-(at % tiles.TileWidth) * size.w}px ${-Math.floor(at / tiles.TileWidth) * size.h}px`
+      $('hoverPeek').classList.add('has-picture')
+    }
+    return
+  }
+  if (peek.none || state.playMethod === 'Server transcode') return
+  const step = peekStep()
+  const at = Math.min(Math.floor(t / step) * step, Math.max(0, state.duration - 1))
+  peek.hovered = at
+  const seen = peek.cache.get(at)
+  if (seen) { showPicture(at, seen); return }
+  if (peek.asked === at) return
+  peek.asked = at
+  const k = devicePixelRatio
+  send({ cmd: 'peek', t: at, w: Math.round(size.w * k), h: Math.round(size.h * k), d: state.duration, v: peek.video })
+}
+
+function showPicture(at, url) {
+  if (peek.shown === at) return
+  peek.shown = at
+  const frame = $('peekFrame')
+  frame.style.backgroundImage = `url("${url}")`
+  frame.style.backgroundSize = 'cover'
+  frame.style.backgroundPosition = 'center'
+  $('hoverPeek').classList.add('has-picture')
+}
+
+onHost((m) => {
+  // Only pictures of the video playing now.
+  if (m.type !== 'peek' || m.v !== peek.video) return
+  if (m.none) { peek.none = true; return }
+  const url = `data:image/jpeg;base64,${m.jpg}`
+  peek.cache.set(m.t, url)
+  if (peek.cache.size > PEEK_KEEP) peek.cache.delete(peek.cache.keys().next().value)
+  if (peek.asked === m.t) peek.asked = null
+  // The picture for where the pointer is now, or the nearest one while that comes.
+  if (peek.hovered === m.t || peek.shown == null) showPicture(m.t, url)
+  else if (peek.hovered != null && peek.hovered !== m.t && !peek.cache.has(peek.hovered) && peek.asked == null) {
+    peek.asked = peek.hovered
+    const size = peekSize(), k = devicePixelRatio
+    send({ cmd: 'peek', t: peek.hovered, w: Math.round(size.w * k), h: Math.round(size.h * k), d: state.duration, v: peek.video })
+  }
 })
 
 document.addEventListener('keydown', (e) => {

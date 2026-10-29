@@ -15,6 +15,7 @@ window.addEventListener('exo:now-playing', async (e) => {
   hideUpNext()
   $('skipBtn').hidden = true
   const id = plus.item.Id
+  tellAnime()
   send({ cmd: 'media', title: plus.item.Name ?? '', subtitle: mediaLine(plus.item), image: poster(plus.item, 300) })
   try {
     const s = await jf('segments', { id })
@@ -40,7 +41,7 @@ onHost((m) => {
     send({ cmd: 'chapters' })
   } else if (m.type === 'tracks') {
     plus.tracks = m.list ?? []
-    if (plus.applyLanguages) { plus.applyLanguages = false; applyRememberedLanguages() }
+    if (plus.applyLanguages) { plus.applyLanguages = false; tellAnime(); applyRememberedLanguages() }
     if (!$('trackMenu').hidden) drawTrackMenu()
   } else if (m.type === 'chapters') {
     // A file that marks its own opening and credits (common in anime) stands in for Jellyfin's segments.
@@ -100,14 +101,86 @@ function remember(kind, lang) {
   try { localStorage.setItem(languageKey(plus.item), JSON.stringify(saved)) } catch { }
 }
 
-// The show's languages as last chosen: the next episode starts the way the last one was set.
+// ── The tracks a video starts on ───────────────────────────────────────────────────────────────────────────────
+// The show's languages as last chosen, so the next episode starts the way the last one was set. Otherwise: the
+// file's own language (Japanese for anime, which is watched in it), in its best recording (lossless before lossy,
+// more channels before fewer, never a commentary or description track); and, when that isn't the viewer's language,
+// full subtitles in theirs (styled ones first, as anime's are; never signs-only or forced), or, when it is, only the
+// signs and songs.
+
+// Languages compare by name: "jpn", "ja" and "ja-JP" are all Japanese. Matroska writes some in their older codes.
+const OLD_CODES = { ger: 'deu', fre: 'fra', chi: 'zho', dut: 'nld', cze: 'ces', gre: 'ell', per: 'fas', rum: 'ron', slo: 'slk', ice: 'isl', alb: 'sqi', arm: 'hye', baq: 'eus', bur: 'mya', geo: 'kat', mac: 'mkd', mao: 'mri', may: 'msa', tib: 'bod', wel: 'cym' }
+const languageNames = new Intl.DisplayNames(['en'], { type: 'language' })
+function langName(code) {
+  const base = (code ?? '').toLowerCase().split(/[-_]/)[0]
+  // Untagged ("und") says nothing either way.
+  if (!base || ['und', 'zxx', 'mul', 'mis', 'unk'].includes(base)) return ''
+  try { return languageNames.of(OLD_CODES[base] ?? base) ?? base } catch { return base }
+}
+const viewerLanguage = langName(navigator.language || 'en')
+
+const SIDE_TRACK = /comment|descri|\bAD\b|narrat/i
+const SIGNS = /sign|song|forced|karaoke/i
+
+function audioRank(t) {
+  const c = (t.codec ?? '').toLowerCase(), p = `${t.profile ?? ''} ${t.title ?? ''}`.toLowerCase()
+  const kind = c === 'truehd' ? (p.includes('atmos') ? 7 : 6)
+    : c.startsWith('pcm') || c === 'flac' || c === 'alac' || (c === 'dts' && /ma|hd|x/.test(p)) ? 5
+    : c === 'eac3' ? (p.includes('atmos') ? 5 : 4) : c === 'dts' || c === 'ac3' ? 3 : c === 'opus' || c === 'aac' ? 2 : 1
+  return kind * 100 + Number(t.channels || 0) * 2 + (t.isDefault ? 1 : 0)
+}
+
+function subRank(t) {
+  const c = (t.codec ?? '').toLowerCase()
+  const kind = c === 'ass' || c === 'ssa' ? 3 : c === 'hdmv_pgs_subtitle' || c === 'dvd_subtitle' || c === 'dvb_subtitle' ? 1 : 2
+  return kind * 10 + (/full|dialog/i.test(t.title ?? '') ? 4 : 0) + (t.hearing || /sdh|\bcc\b|hearing/i.test(t.title ?? '') ? 0 : 2) + (t.isDefault ? 1 : 0)
+}
+
+// Anime: so tagged, or animation made in Japan (its country, its Japanese title, or its Japanese audio).
+const isAnime = (item) => {
+  const genres = [...(item?.Genres ?? []), ...(item?.SeriesGenres ?? [])].join(' ')
+  if (/anime/i.test(genres)) return true
+  if (!/animation|animated/i.test(genres)) return false
+  return [...(item?.ProductionLocations ?? []), ...(item?.SeriesProductionLocations ?? [])].some((p) => /japan/i.test(p))
+    || /[぀-ヿ一-鿿]/.test(`${item?.OriginalTitle ?? ''} ${item?.SeriesOriginalTitle ?? ''}`)
+    || plus.tracks.some((t) => t.type === 'audio' && langName(t.lang) === 'Japanese')
+}
+
+// The host draws anime with ArtCNN (MainWindow.Player.cs › ApplyAnime): told as soon as the title is known, and again
+// once the file's tracks are, which can show Japanese audio.
+const tellAnime = () => send({ cmd: 'anime', on: !!plus.item && isAnime(plus.item) })
+
 function applyRememberedLanguages() {
   let saved = {}
   try { saved = JSON.parse(localStorage.getItem(languageKey(plus.item)) ?? '{}') } catch { }
-  const pick = (type, lang) => plus.tracks.filter((t) => t.type === type && t.lang === lang).sort((a, b) => Number(a.forced) - Number(b.forced))[0]
-  if (saved.audio) { const a = pick('audio', saved.audio); if (a && !a.selected) send({ cmd: 'set', name: 'aid', value: String(a.id) }) }
-  if (saved.sub === 'off') send({ cmd: 'set', name: 'sid', value: 'no' })
-  else if (saved.sub) { const s = pick('sub', saved.sub); if (s && !s.selected) send({ cmd: 'set', name: 'sid', value: String(s.id) }) }
+  const choose = (type, id) => { if (id != null && !plus.tracks.find((t) => t.type === type && t.id === id)?.selected) send({ cmd: 'set', name: type === 'audio' ? 'aid' : 'sid', value: String(id) }) }
+  const audios = plus.tracks.filter((t) => t.type === 'audio')
+  const subs = plus.tracks.filter((t) => t.type === 'sub')
+
+  const mains = audios.filter((t) => !SIDE_TRACK.test(t.title ?? ''))
+  const pool = mains.length ? mains : audios
+  const language = saved.audio ? langName(saved.audio)
+    : isAnime(plus.item) && pool.some((t) => langName(t.lang) === 'Japanese') ? 'Japanese'
+    : langName((pool.find((t) => t.selected) ?? pool.find((t) => t.isDefault) ?? pool[0])?.lang)
+  const audio = pool.filter((t) => langName(t.lang) === language).sort((a, b) => audioRank(b) - audioRank(a))[0]
+  if (audio) choose('audio', audio.id)
+
+  if (saved.sub === 'off') { send({ cmd: 'set', name: 'sid', value: 'no' }); return }
+  if (saved.sub) {
+    const s = subs.filter((t) => langName(t.lang) === langName(saved.sub)).sort((a, b) => Number(SIGNS.test(a.title ?? '') || a.forced) - Number(SIGNS.test(b.title ?? '') || b.forced) || subRank(b) - subRank(a))[0]
+    if (s) choose('sub', s.id)
+    return
+  }
+  const mine = subs.filter((t) => langName(t.lang) === viewerLanguage)
+  const spoken = langName((audio ?? audios.find((t) => t.selected))?.lang)
+  if (spoken && spoken !== viewerLanguage) {
+    const full = mine.filter((t) => !t.forced && !SIGNS.test(t.title ?? '')).sort((a, b) => subRank(b) - subRank(a))[0]
+    if (full) choose('sub', full.id)
+  } else if (spoken) {
+    const signs = mine.find((t) => t.forced || SIGNS.test(t.title ?? ''))
+    if (signs) choose('sub', signs.id)
+    else if (subs.some((t) => t.selected)) send({ cmd: 'set', name: 'sid', value: 'no' })
+  }
 }
 
 $('trackMenu').addEventListener('click', (e) => {

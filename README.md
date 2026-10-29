@@ -4,24 +4,24 @@
 
 <p align="center">
   <a href="https://github.com/UhhErix/ExoCinema/releases/latest/download/ExoCinema-Setup.exe"><strong>Download for Windows 11</strong></a>
-  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.2.0">What's new in 1.2.0</a>
+  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.3.0">What's new in 1.3.0</a>
   · <a href="CHANGELOG.md">Changelog</a>
   · <a href="PRIVACY.md">Privacy</a>
   · <a href="SECURITY.md">Security</a>
   · <a href="LICENSE">License</a>
 </p>
 
-![Exo Cinema playing Sol Levante, Netflix's open anime short, with the Liquid Glass controls over the picture](docs/media/hero.jpg)
+![Exo Cinema playing Sol Levante, Netflix's open anime short, with the Liquid Glass controls over the picture and the seek bar's preview of a later moment](docs/media/hero.jpg)
 
 ## Download
 
 | File | Version | SHA-256 |
 | --- | --- | --- |
-| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.2.0/ExoCinema-Setup.exe) | 1.2.0 | `7904e3134b1613eec1318896d46ec07b8946a6ae52682fdc56653aaf95a73849` |
+| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.3.0/ExoCinema-Setup.exe) | 1.3.0 | `7f8e30e2ac9ca0284ce3c8dcc42b479800edd2964bd13ed9c5f8384908929038` |
 
 **Requirements:** Windows 11 x64 with WebView2 (built into Windows 11; Setup installs it if it's missing), and a Jellyfin server to sign in to. Installs for your Windows user only, in `%LOCALAPPDATA%\ExoCinema\app`, with no administrator rights.
 
-**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.2.0):
+**Check your download.** The installer isn't code-signed yet, so Windows SmartScreen may warn the first time (choose **More info**, then **Run anyway**). Before you run it, check that its hash matches the one above and on the [release page](https://github.com/UhhErix/ExoCinema/releases/tag/v1.3.0):
 
 ```powershell
 Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
@@ -43,6 +43,8 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 - **Progress that follows you:** where you stop and what you've watched go back to Jellyfin as you watch, so your phone, TV and every other Jellyfin app pick up where you left off.
 - **A native player:** mpv draws the picture with hardware decoding, HDR and Dolby Vision tone mapping and high-quality scaling, at the video's own frame rate.
 - **Liquid Glass over the picture:** the controls blur the video under them as it plays, drawn by the player on the graphics card at no cost to playback.
+- **Pictures on the seek bar:** hover it to see the moment you'd jump to, from your server's previews or drawn on the spot, and drag it as fast as you like.
+- **The best stream and tracks for you:** a stream add-on's streams ranked by their details for your PC and connection, and the best recording in the language you'd expect, with full subtitles in yours when you need them.
 - **The things you reach for:** audio and subtitle tracks remembered for each show, playback speed, Skip intro and Skip credits, and Up Next that plays the next episode on its own.
 - **Steady over a slow link:** the player reads far ahead, waits for a few seconds of picture rather than stuttering, and reconnects when a server drops the stream.
 - **Media keys and Windows' media controls:** play, pause and next from the keyboard with another window in front, and what's playing, with its poster, in Windows' media controls and Exo Launcher's Now Playing.
@@ -52,20 +54,22 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 ## The player
 
 - **Built on mpv.** libmpv decodes and draws into the window itself, under the interface, so the picture never passes through a web page: hardware decoding through Direct3D 11, mpv's high-quality scalers picked for your PC as it plays (lighter on integrated graphics, on battery, or when frames drop), and HDR and Dolby Vision tone mapped for your screen.
-- **AI upscaling on RTX cards.** A video smaller than your screen is enlarged by NVIDIA's RTX Video Super Resolution when it's switched on (Exo Launcher's PC > Display), and steps aside while a game runs.
+- **Anime redrawn by ArtCNN.** A neural network trained on drawn art redraws anime at up to 4K and shrinks it back to your screen: crisp lines, backgrounds with their texture. It was chosen on a picture bench against Anime4K and NVIDIA's upscaler, and it is built for your graphics card once, in the background.
+- **AI upscaling on RTX cards.** A film or show smaller than your screen is enlarged by NVIDIA's RTX Video Super Resolution when it's switched on (Exo Launcher's PC > Display). Both upscalers step aside while a game runs.
+- **Pictures on the seek bar.** Hover it for the moment you'd jump to: your Jellyfin server's previews when it made them, otherwise drawn on the spot by a second player kept out of sight.
 - **Glass that moves with the picture.** The glass under the controls is drawn by the player as part of each frame, so it never lags the video and never copies frames off the graphics card. With the controls up over 4K60 Dolby Vision, the test PC dropped no frames.
-- **Audio, subtitles and speed** live in one menu under the sliders button at the top right. Pick a language once and the show's next episodes start with it. Subtitles rise above the controls while they show.
+- **Audio, subtitles and speed** live in one menu under the sliders button at the top right. A video starts on its best recording in the language you'd expect (Japanese for anime) with full subtitles in yours when the audio isn't; pick a language once and the show's next episodes start with it. Plain subtitles are drawn in Inter and rise above the controls while they show.
 - **Skip intro and Up Next.** Openings and credits marked by your server (Jellyfin's media segments) or named in the file's chapters get a Skip button; near the end of an episode the next one counts down, and **Not now** stops it.
 - **Keys you know:** Space or K to pause, arrows to seek and set the volume, J and L for ten seconds, F for full screen, M to mute, I for what's playing and how.
 
 ## Settings
 
 - **Look:** Liquid Glass or solid, and Reduce motion.
-- **Playback:** Source (play the best version of a title for this PC, or ask which when your server has several) and whether the next episode plays by itself. The picture's quality and hardware decoding need no setting: Exo Cinema picks them for your PC.
+- **Playback:** Source (play the best version of a title for this PC and connection, or ask which, with every stream a stream add-on offers) and whether the next episode plays by itself. The picture's quality and hardware decoding need no setting: Exo Cinema picks them for your PC.
 - **Account:** your Jellyfin account page and Sign out.
 - **About:** your version, what's new, and Check for updates.
 
-![What's new in Exo Cinema 1.2.0, shown once after an update](docs/media/whats-new.jpg)
+![What's new in Exo Cinema 1.3.0, shown once after an update](docs/media/whats-new.jpg)
 
 ## How it works
 
@@ -104,6 +108,7 @@ To ask for permission, [open an issue](https://github.com/UhhErix/ExoCinema/issu
 **Open-source parts that ship with Exo Cinema** keep their own licenses, and their source is public:
 
 - [libmpv](https://github.com/mpv-player/mpv) (LGPL), the player, with [FFmpeg](https://github.com/FFmpeg/FFmpeg) (LGPL) inside it. It ships as its own file you may replace with your own build.
+- [ArtCNN](https://github.com/Artoriuz/ArtCNN) (MIT), the anime upscaler's network, as mpv shaders.
 
 Every bundled library, font and tool is listed in [Third-party notices](THIRD_PARTY_NOTICES.md).
 

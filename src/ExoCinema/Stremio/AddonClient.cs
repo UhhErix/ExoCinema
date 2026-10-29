@@ -45,4 +45,23 @@ internal sealed class AddonClient
                 urls.Add(u);
         return urls;
     }
+
+    /// <summary>One stream as the add-on describes it: its address, every line it says about it (name, description,
+    /// file name) and the file's size when given.</summary>
+    public sealed record Stream(string Url, string Text, long? Size);
+
+    /// <summary>The same list with what the add-on says about each stream, for choosing between them.</summary>
+    public async Task<List<Stream>> StreamListAsync(string type, string id, CancellationToken ct = default)
+    {
+        var res = await Http.GetFromJsonAsync<JsonNode>($"{_base}/stream/{type}/{id}.json", ct);
+        var list = new List<Stream>();
+        foreach (var s in res?["streams"] as JsonArray ?? [])
+        {
+            if ((string?)s?["url"] is not { } u || !Uri.TryCreate(u, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) continue;
+            var hints = s["behaviorHints"];
+            var text = string.Join('\n', new[] { (string?)s["name"], (string?)s["description"] ?? (string?)s["title"], (string?)hints?["filename"] }.Where(t => !string.IsNullOrWhiteSpace(t)));
+            list.Add(new Stream(u, text, hints?["videoSize"] is JsonValue v && v.TryGetValue<long>(out var size) ? size : null));
+        }
+        return list;
+    }
 }

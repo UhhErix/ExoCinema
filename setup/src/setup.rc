@@ -14,12 +14,12 @@ BEGIN
   BEGIN
     BLOCK "040904b0"
     BEGIN
-      VALUE "CompanyName", "UhhErix"
+      VALUE "CompanyName", "Exo"
       VALUE "FileDescription", "Exo Cinema Setup"
       VALUE "FileVersion", VERSION_TEXT
       VALUE "ProductName", "Exo Cinema"
       VALUE "ProductVersion", VERSION_TEXT
-      VALUE "LegalCopyright", "Copyright (c) 2026 UhhErix"
+      VALUE "LegalCopyright", "Copyright (c) 2026 Erix (UhhErix)"
       VALUE "OriginalFilename", "ExoCinema-Setup.exe"
     END
   END

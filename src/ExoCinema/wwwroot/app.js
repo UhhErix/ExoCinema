@@ -442,7 +442,8 @@ window.addEventListener('hashchange', render)
 // host takes the best version for this PC. Up Next passes ask = false, so a countdown never stops for a question.
 async function play(id, resume = true, ask = true) {
   let source
-  if (ask && pref('source') === 'ask' && knownItem(id)?.MediaSourceCount !== 1) {
+  // A title the server holds once can still have many streams from the add-on: those are asked about too.
+  if (ask && pref('source') === 'ask' && (knownItem(id)?.MediaSourceCount !== 1 || localStorage.getItem('exo:addon'))) {
     source = await pickSource(id)
     if (source === null) return
   }
@@ -452,6 +453,7 @@ async function play(id, resume = true, ask = true) {
     $('spinner').hidden = false
     const r = await jf('play', { id, resume, addon: localStorage.getItem('exo:addon') || undefined, source })
     if (r) state.playMethod = r.playMethod === 'DirectPlay' ? 'Direct play' : 'Server transcode'
+    if (r?.item) peekFrom(r.item, r.mediaSourceId, session.server)
     if (r?.item) window.dispatchEvent(new CustomEvent('exo:now-playing', { detail: r.item }))
   } catch (e) {
     if (!inPlayer()) return
@@ -475,7 +477,7 @@ function knownItem(id) {
 
 // A version as the sheet lists it: the picture first, then what else sets it apart.
 const RANGES = { DOVI: 'Dolby Vision', DOVIWithHDR10: 'Dolby Vision', DOVIWithHLG: 'Dolby Vision', DOVIWithSDR: 'Dolby Vision', HDR10: 'HDR10', HDR10Plus: 'HDR10+', HLG: 'HLG' }
-const CODECS = { hevc: 'HEVC', h264: 'H.264', av1: 'AV1', vp9: 'VP9', mpeg2video: 'MPEG-2', truehd: 'TrueHD', eac3: 'E-AC-3', ac3: 'AC-3', dts: 'DTS', aac: 'AAC', flac: 'FLAC', opus: 'Opus', mp3: 'MP3' }
+const CODECS = { hevc: 'HEVC', h264: 'H.264', av1: 'AV1', vp9: 'VP9', mpeg2video: 'MPEG-2', atmos: 'Atmos', truehd: 'TrueHD', eac3: 'E-AC-3', ac3: 'AC-3', dtshd: 'DTS-HD', dts: 'DTS', aac: 'AAC', flac: 'FLAC', opus: 'Opus', mp3: 'MP3' }
 const CHANNELS = { 1: 'Mono', 2: 'Stereo', 6: '5.1', 8: '7.1' }
 
 function sourceRow(s) {
@@ -488,14 +490,14 @@ function sourceRow(s) {
   const audio = [CODECS[s.audioCodec] ?? s.audioCodec?.toUpperCase(), CHANNELS[s.channels] ?? (s.channels ? `${s.channels} ch` : ''), language].filter(Boolean).join(' ')
   // The version's own name only when it says more than the picture does ("4K Remux", not "1080p" again).
   const named = s.name && !picture.toLowerCase().includes(s.name.toLowerCase()) ? s.name : ''
-  const detail = [named, s.size ? bytes(s.size) : '', s.bitrate ? `${Math.round(s.bitrate / 1e6)} Mbps` : '', audio, s.direct ? '' : 'Converted by the server'].filter(Boolean).join(' · ')
+  const detail = [named, s.origin, s.size ? bytes(s.size) : '', s.bitrate ? `${Math.round(s.bitrate / 1e6)} Mbps` : '', audio, s.direct ? '' : 'Converted by the server', s.notReady ? 'Not cached yet' : ''].filter(Boolean).join(' · ')
   return `<button type="button" class="source-row" role="option" data-source="${esc(s.id)}">
     <span class="source-text"><span class="source-name">${esc(picture)}</span><span class="source-detail">${esc(detail)}</span></span>
     ${s.best ? '<span class="source-best">Best</span>' : ''}</button>`
 }
 
-// The source sheet: the item's versions, best first, to pick one; null when it is put away. It opens at once and
-// fills when the server answers; a title with one version plays without asking.
+// The source sheet: the item's versions (or its add-on's streams), best first, to pick one; null when it is put away.
+// It opens with a spinner and fills when the server answers; a title with one version plays without asking.
 function pickSource(id) {
   return new Promise((resolve) => {
     const sheet = $('sources'), list = $('sourcesList')
@@ -510,14 +512,15 @@ function pickSource(id) {
     }
     const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(null) } }
     list.innerHTML = '<div class="spinner sources-wait"></div>'
-    sheet.hidden = false
+    // Shown after a beat: a title with one version plays straight away, without the sheet flashing up.
+    setTimeout(() => { if (!done) sheet.hidden = false }, 200)
     document.addEventListener('keydown', onKey, true)
     sheet.onclick = (e) => {
       if (e.target.closest('[data-close-sources]')) finish(null)
       const row = e.target.closest('[data-source]')
       if (row) finish(row.dataset.source)
     }
-    jf('sources', { id }).then((all) => {
+    jf('sources', { id, addon: localStorage.getItem('exo:addon') || undefined }).then((all) => {
       if (done) return
       if (!all?.length || all.length === 1) { finish(all?.[0]?.id); return }
       list.innerHTML = all.map(sourceRow).join('')
