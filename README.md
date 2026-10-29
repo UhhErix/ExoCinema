@@ -70,7 +70,7 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 - **Account:** your Jellyfin account page and Sign out.
 - **About:** your version, what's new, and Check for updates.
 
-![What's new in Exo Cinema 1.3.0, shown once after an update](docs/media/whats-new.jpg)
+![What's new in Exo Cinema 1.4.0, shown once after an update](docs/media/whats-new.jpg)
 
 ## How it works
 
