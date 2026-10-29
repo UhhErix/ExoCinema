@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/UhhErix/ExoCinema/releases/latest/download/ExoCinema-Setup.exe"><strong>Download for Windows 11</strong></a>
-  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.3.0">What's new in 1.3.0</a>
+  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.4.0">What's new in 1.4.0</a>
   · <a href="CHANGELOG.md">Changelog</a>
   · <a href="PRIVACY.md">Privacy</a>
   · <a href="SECURITY.md">Security</a>
@@ -17,7 +17,7 @@
 
 | File | Version | SHA-256 |
 | --- | --- | --- |
-| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.3.0/ExoCinema-Setup.exe) | 1.3.0 | `7f8e30e2ac9ca0284ce3c8dcc42b479800edd2964bd13ed9c5f8384908929038` |
+| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.4.0/ExoCinema-Setup.exe) | 1.4.0 | `8654e937537716519ae792559cd8540c6adf7caa3753108b8e8beb1b3407a3f8` |
 
 **Requirements:** Windows 11 x64 with WebView2 (built into Windows 11; Setup installs it if it's missing), and a Jellyfin server to sign in to. Installs for your Windows user only, in `%LOCALAPPDATA%\ExoCinema\app`, with no administrator rights.
 
@@ -55,7 +55,8 @@ Get-FileHash .\ExoCinema-Setup.exe -Algorithm SHA256
 
 - **Built on mpv.** libmpv decodes and draws into the window itself, under the interface, so the picture never passes through a web page: hardware decoding through Direct3D 11, mpv's high-quality scalers picked for your PC as it plays (lighter on integrated graphics, on battery, or when frames drop), and HDR and Dolby Vision tone mapped for your screen.
 - **Anime redrawn by ArtCNN.** A neural network trained on drawn art redraws anime at up to 4K and shrinks it back to your screen: crisp lines, backgrounds with their texture. It was chosen on a picture bench against Anime4K and NVIDIA's upscaler, and it is built for your graphics card once, in the background.
-- **AI upscaling on RTX cards.** A film or show smaller than your screen is enlarged by NVIDIA's RTX Video Super Resolution when it's switched on (Exo Launcher's PC > Display). Both upscalers step aside while a game runs.
+- **AI upscaling on RTX cards.** A film or show smaller than your screen is enlarged by NVIDIA's RTX Video Super Resolution when it's switched on (Exo Launcher's PC > Display). Both upscalers step aside while a game runs. On a laptop with two graphics chips, the player draws on the faster one while it's plugged in.
+- **Surround as it was mixed.** With an AV receiver or soundbar on HDMI, Dolby Atmos, DTS:X and the rest go to it untouched, so it plays their height channels, and its own volume sets the level. It steps aside while another app plays through it, a game runs or an Exo voice call is on.
 - **Pictures on the seek bar.** Hover it for the moment you'd jump to: your Jellyfin server's previews when it made them, otherwise drawn on the spot by a second player kept out of sight.
 - **Glass that moves with the picture.** The glass under the controls is drawn by the player as part of each frame, so it never lags the video and never copies frames off the graphics card. With the controls up over 4K60 Dolby Vision, the test PC dropped no frames.
 - **Audio, subtitles and speed** live in one menu under the sliders button at the top right. A video starts on its best recording in the language you'd expect (Japanese for anime) with full subtitles in yours when the audio isn't; pick a language once and the show's next episodes start with it. Plain subtitles are drawn in Inter and rise above the controls while they show.
@@ -77,7 +78,6 @@ Exo Cinema is a native Windows app built like Exo Launcher: WinUI 3 on .NET, wit
 
 - **Its own interface:** Exo Cinema's page, served from the app folder, not the web. It talks to your server only through the app.
 - **Your server, directly:** Exo Cinema signs in to your Jellyfin server and plays from it. There is no Exo server in between.
-- **Building it:** [docs/BUILDING.md](docs/BUILDING.md) says how the source fits together and how to build it.
 
 ## Privacy and safety
 
@@ -90,18 +90,17 @@ Film images in these pictures: Sol Levante © Akira Saitoh, Production I.G, Netf
 
 ## Contributing
 
-Bug reports, fixes and clearer wording are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first: it explains what you agree to when you send a change, since Exo Cinema isn't open source.
+Bug reports, ideas and clearer wording are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first: it explains what you agree to when you send a change, since Exo Cinema isn't open source.
 
 ## License
 
-Exo Cinema is **source-available and free for personal use**. It is not open source. The full terms are in [LICENSE](LICENSE); this is a plain summary, and LICENSE wins if they differ.
+Exo Cinema is **free for personal use**. It is not open source, and from 1.4.0 on its source isn't published. The full terms are in [LICENSE](LICENSE); this is a plain summary, and LICENSE wins if they differ.
 
 | You can | You need written permission to |
 | --- | --- |
-| Download, install and run the official app on your devices | Copy, fork outside GitHub, mirror or redistribute the source |
-| Read the source to see what Exo Cinema does | Publish, sell or rebrand a changed version |
-| Build it and run it on your own devices to check it against the release | |
-| Send fixes as pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)) | |
+| Download, install and run the official app on your devices | Copy, mirror or redistribute the app or its source |
+| Replace its libmpv with your own build, as libmpv's license allows | Publish, sell or rebrand a changed version |
+| Suggest changes to these pages as pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)) | |
 
 To ask for permission, [open an issue](https://github.com/UhhErix/ExoCinema/issues). The app is provided as is, without warranty.
 

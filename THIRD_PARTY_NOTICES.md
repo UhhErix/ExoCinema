@@ -8,11 +8,11 @@ Exo Cinema plays video with libmpv, installed as `app\libmpv-2.dll`, a separate 
 
 | Component | Version | License | Source |
 | --- | --- | --- | --- |
-| mpv, by the mpv developers | v0.41.0-1346-gdc4b285c9 | LGPL-2.1-or-later | <https://github.com/mpv-player/mpv/tree/dc4b285c93> |
-| FFmpeg, by the FFmpeg developers (built in) | N-128155-g8e362b7b5 | LGPL-3.0-or-later | <https://github.com/FFmpeg/FFmpeg/tree/8e362b7b5> |
+| mpv, by the mpv developers | v0.41.0-1349-gcf764c61d | LGPL-2.1-or-later | <https://github.com/mpv-player/mpv/tree/cf764c61d1> |
+| FFmpeg, by the FFmpeg developers (built in) | N-128186-gc0f6ae570 | LGPL-3.0-or-later | <https://github.com/FFmpeg/FFmpeg/tree/c0f6ae570> |
 | libplacebo, libass and the other libraries the build links in | as built | each LGPL-compatible, as listed by the build | <https://github.com/shinchiro/mpv-winbuild-cmake#information-about-packages> |
 
-The library is zhongfly's LGPL build of libmpv, release `2026-10-28-dc4b285c93`, file `mpv-dev-lgpl-x86_64-20261028-git-dc4b285c93.7z` (SHA-256 `2d55e5686527a0fcf38d61e8da5890c27c92e1d0df195775a8736c67e0063b6a`), made by the scripts at <https://github.com/zhongfly/mpv-winbuild> with mpv built with `-Dgpl=false` and FFmpeg without its GPL parts. Exo Cinema uses it unmodified. Its license texts ship in `app\licenses`: `LGPL-2.1.txt`, `LGPL-3.0.txt` and `GPL-3.0.txt` (which LGPL 3 builds on). Its source is at the links above; for help getting it, open an issue at <https://github.com/UhhErix/ExoCinema/issues>.
+The library is zhongfly's LGPL build of libmpv, release `2026-10-29-cf764c61d1`, file `mpv-dev-lgpl-x86_64-20261029-git-cf764c61d1.7z` (SHA-256 `f62fd6192e7310397a8b4288330e8f2f838fe85a8d1e5a0f242940fae940f04d`), made by the scripts at <https://github.com/zhongfly/mpv-winbuild> with mpv built with `-Dgpl=false` and FFmpeg without its GPL parts. Exo Cinema uses it unmodified. Its license texts ship in `app\licenses`: `LGPL-2.1.txt`, `LGPL-3.0.txt` and `GPL-3.0.txt` (which LGPL 3 builds on). Its source is at the links above; for help getting it, open an issue at <https://github.com/UhhErix/ExoCinema/issues>.
 
 ## Built into Exo Cinema
 
