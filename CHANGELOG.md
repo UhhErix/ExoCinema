@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2 — October 31, 2026
+
+- **Files open straight away.** A file opened with Exo Cinema starts playing while the rest of the app comes up; local files read 10 s ahead with a 64 MB cap instead of minutes. The anime upscaler's first compile waits until a non-anime video stops.
+- **Quiet while you watch.** Hidden player controls stop scheduling animation and video glass work. _Checked in tests._
+- **Reliable player controls.** Typing and IME input keep their keys; unusual track language tags no longer break the track menu. _Checked in tests._
+
 ## 1.4.0 — October 29, 2026
 
 Surround to your receiver as it was mixed, picture choices made for the graphics card you have, and seeking that follows the video again.
