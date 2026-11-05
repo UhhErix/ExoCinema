@@ -1,4 +1,13 @@
 # Changelog
+## 1.4.5 — November 5, 2026
+- **Jellyfin's top bar and buttons at every size.** The bar and its buttons answer the first click at any window size, after Maximize and Restore too, not only at the size they opened at. _Checked in code only._
+- **Cinema matches Exo Launcher.** The player's controls and Settings use Launcher's buttons, switches, rows, words and hover fill, so the two look like one app. _Checked in code only._
+- **What's New is the Changelog.** The sheet opens the Changelog, with each release's notes, in place of the old What's New list. _Checked in code only._
+- **Smarter buffering.** A file starts loading ahead of what you watch, its read-ahead is sized from the memory free at that moment and is resized live while a network film plays, and a Jellyfin version is chosen for your measured link speed, direct play only. _Checked in code only._
+- **Jellyfin sign-in replaces the imports.** Settings' Import group and its first-run offer are gone; connecting your Jellyfin server once brings your library, progress and favorites. An import an older copy synced is ignored. _Checked in code only._
+- **Jellyfin's first run links.** The server field starts at `https://jlly.cc`, to type over with your own server. Under it, **Create an account**, **Set up AIOStreams** and **Get PublicMetaDB** open those sites in your browser; nothing is sent to a server until you press Connect. _Checked in code only._
+- **HDR on for HDR films.** A film with an HDR picture switches its screen to HDR before its first frame and back off after it, with no setting. A next HDR film keeps HDR on through the change, and a refused switch is tried again. _Checked in code only._
+
 
 ## 1.4.3 — November 5, 2026
 
