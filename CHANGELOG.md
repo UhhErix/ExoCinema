@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.3 — November 5, 2026
+
+- **Exo Launcher's look.** Tabler's newest icons at a lighter line, Geist everywhere, subtitles included, and the top right button is now Settings' gear, with your profile inside Settings. _Checked in code only._
+
 ## 1.4.2 — October 31, 2026
 
 - **Files open straight away.** A file opened with Exo Cinema starts playing while the rest of the app comes up; local files read 10 s ahead with a 64 MB cap instead of minutes. The anime upscaler's first compile waits until a non-anime video stops.

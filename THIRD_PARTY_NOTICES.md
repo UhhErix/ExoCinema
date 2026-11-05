@@ -8,11 +8,11 @@ Exo Cinema plays video with libmpv, installed as `app\libmpv-2.dll`, a separate 
 
 | Component | Version | License | Source |
 | --- | --- | --- | --- |
-| mpv, by the mpv developers | v0.41.0-1349-gcf764c61d | LGPL-2.1-or-later | <https://github.com/mpv-player/mpv/tree/cf764c61d1> |
-| FFmpeg, by the FFmpeg developers (built in) | N-128186-gc0f6ae570 | LGPL-3.0-or-later | <https://github.com/FFmpeg/FFmpeg/tree/c0f6ae570> |
+| mpv, by the mpv developers | v0.41.0-1372-g8e5a96fc4 | LGPL-2.1-or-later | <https://github.com/mpv-player/mpv/tree/8e5a96fc45> |
+| FFmpeg, by the FFmpeg developers (built in) | N-128212-g17a4a474f | LGPL-3.0-or-later | <https://github.com/FFmpeg/FFmpeg/tree/17a4a474f> |
 | libplacebo, libass and the other libraries the build links in | as built | each LGPL-compatible, as listed by the build | <https://github.com/shinchiro/mpv-winbuild-cmake#information-about-packages> |
 
-The library is zhongfly's LGPL build of libmpv, release `2026-10-29-cf764c61d1`, file `mpv-dev-lgpl-x86_64-20261029-git-cf764c61d1.7z` (SHA-256 `f62fd6192e7310397a8b4288330e8f2f838fe85a8d1e5a0f242940fae940f04d`), made by the scripts at <https://github.com/zhongfly/mpv-winbuild> with mpv built with `-Dgpl=false` and FFmpeg without its GPL parts. Exo Cinema uses it unmodified. Its license texts ship in `app\licenses`: `LGPL-2.1.txt`, `LGPL-3.0.txt` and `GPL-3.0.txt` (which LGPL 3 builds on). Its source is at the links above; for help getting it, open an issue at <https://github.com/UhhErix/ExoCinema/issues>.
+The library is zhongfly's LGPL build of libmpv, release `2026-10-30-8e5a96fc45`, file `mpv-dev-lgpl-x86_64-20261030-git-8e5a96fc45.7z` (SHA-256 `35d45ddb36b978761a38abac6c7635bdb182aa49e6f36e9785df9525c24ea3b1`), made by the scripts at <https://github.com/zhongfly/mpv-winbuild> with mpv built with `-Dgpl=false` and FFmpeg without its GPL parts. Exo Cinema uses it unmodified. Its license texts ship in `app\licenses`: `LGPL-2.1.txt`, `LGPL-3.0.txt` and `GPL-3.0.txt` (which LGPL 3 builds on). Its source is at the links above; for help getting it, open an issue at <https://github.com/UhhErix/ExoCinema/issues>.
 
 ## Built into Exo Cinema
 
@@ -22,7 +22,9 @@ The library is zhongfly's LGPL build of libmpv, release `2026-10-29-cf764c61d1`,
 | Windows App SDK and WinUI 3, by Microsoft | MIT | <https://github.com/microsoft/WindowsAppSDK> |
 | Microsoft Edge WebView2 SDK | BSD-3-Clause, below | <https://www.nuget.org/packages/Microsoft.Web.WebView2> |
 | Tabler Icons, by Paweł Kuna | MIT, below | <https://github.com/tabler/tabler-icons> |
-| Inter, by Rasmus Andersson | SIL Open Font License 1.1 (`app\wwwroot\fonts\LICENSE-Inter.txt`) | <https://github.com/rsms/inter> |
+| Geist, by Vercel and Basement Studio | SIL Open Font License 1.1 (`app\wwwroot\fonts\LICENSE-Geist.txt`) | <https://github.com/vercel/geist-font> |
+| The profile's name fonts: Orbitron, by The Orbitron Project Authors; Bebas Neue, by Dharma Type; Press Start 2P, by The Press Start 2P Project Authors; Pacifico, by The Pacifico Project Authors; Monoton, by Vernon Adams | SIL Open Font License 1.1 (`app\wwwroot\fonts\profile\*-OFL.txt`) | <https://fonts.google.com> |
+| Permanent Marker, by Font Diner (the profile's Marker font) | Apache License 2.0 (`app\wwwroot\fonts\profile\marker-LICENSE.txt`) | <https://fonts.google.com/specimen/Permanent+Marker> |
 | ArtCNN shaders C4F32_DS and C4F16_DS, by João Chrisóstomo and Kacper Michajłow (changed only in when they run, marked `Exo_Supersample_`) | MIT (`app\Shaders\ArtCNN\LICENSE`) | <https://github.com/Artoriuz/ArtCNN> |
 
 The installer is made with NSIS (zlib/libpng license, <https://nsis.sourceforge.io>).
