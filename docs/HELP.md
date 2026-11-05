@@ -80,7 +80,7 @@ Everything can be changed later in Settings, from the button at the top right.
 - **Add-ons:** your add-ons in order, each with its name and host. Paste a link and choose **Add**; the arrows move one up or down (its rows on Home move with it); **Remove** asks once more. Signed in, the list is your Exo account's, on every PC.
 - **Exo account:** who's signed in, **Profile** and **Sign out**.
 - **Storage:** the pictures kept from Cinemeta and your add-ons, and **Clear** to empty them.
-- **About:** your version, **What's new**, **Check for updates** and **Install update**, and links to report a problem, the privacy statement and the licenses.
+- **About:** your version, **What's new**, **Check for updates** and **Install update**, and links to report a problem, the privacy statement and the licenses. **Diagnostics** says what the crash, freeze and error reports send. They are on by default and there is no switch for them; see the privacy statement for what each one holds, and that it is deleted after 30 days.
 
 ## Updates
 
@@ -93,3 +93,5 @@ Windows **Settings > Apps > Installed apps > Exo Cinema > Uninstall**. Your add-
 ## Something wrong?
 
 [Report a problem](https://github.com/UhhErix/ExoCinema/issues/new/choose). Say what you were watching (the kind of file, not its name, is enough) and attach the end of `%LocalAppData%\ExoCinema\app.log`. Exo Cinema keeps your server's address, links, keys and titles out of it.
+
+Exo Cinema also sends a crash, freeze or playback error report by default, with a few stripped log lines (the PRIVACY.md section "Crash, freeze and error reports" lists every field and what is removed). Such a report is never a usage record, and a crash is reported at the next start.

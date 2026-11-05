@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/UhhErix/ExoCinema/releases/latest/download/ExoCinema-Setup.exe"><strong>Download for Windows 11</strong></a>
-  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.4.5">What's new in 1.4.5</a>
+  · <a href="https://github.com/UhhErix/ExoCinema/releases/tag/v1.4.6">What's new in 1.4.6</a>
   · <a href="CHANGELOG.md">Changelog</a>
   · <a href="PRIVACY.md">Privacy</a>
   · <a href="SECURITY.md">Security</a>
@@ -17,7 +17,7 @@
 
 | File | Version | SHA-256 |
 | --- | --- | --- |
-| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.4.5/ExoCinema-Setup.exe) | 1.4.5 | `d3ed0eebd0c64839586b548e1bce20f9c18a48a5eb0403681559b00f40ac27a0` |
+| [ExoCinema-Setup.exe](https://github.com/UhhErix/ExoCinema/releases/download/v1.4.6/ExoCinema-Setup.exe) | 1.4.6 | `58f7c8029715e2e2f8d42d81900b770a143623808300d46938685d0ba05f2515` |
 
 **Requirements:** Windows 11 x64 with WebView2 (built into Windows 11; Setup installs it if it's missing). Installs for your Windows user only, in `%LOCALAPPDATA%\ExoCinema\app`, with no administrator rights.
 

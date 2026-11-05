@@ -1,8 +1,8 @@
 # Exo Cinema privacy statement
 
-**Exo Cinema is local-first. It has no Exo account, no ads, no analytics and no telemetry.**
+**Exo Cinema is local-first. It has no Exo account, no ads and no usage tracking. It does send diagnostic reports when something breaks, on by default; the section "Crash, freeze and error reports" says exactly what each one holds.**
 
-Exo Cinema's only Exo server is its update address, which tells it when a new version is out. Nothing you watch or do in it is sent to Exo or its developer.
+Exo's servers that Exo Cinema talks to are its update address, which tells it when a new version is out, and the report service. Nothing you watch or do in it is sent to Exo or its developer.
 
 ## What stays on this PC
 
@@ -16,7 +16,8 @@ Exo Cinema keeps its data in `%LocalAppData%\ExoCinema`, beside the app (in `app
 - `link.txt`: how fast streams have come in on your connection, one number, so **Best** picks a stream your connection carries smoothly;
 - `watch\ledger.dat`: Exo Watch, what you watched, where you left off and what you saved, by each title's IMDb or TMDB ID and its name, from what you play here; and `sync\cinema.dat`: the choices your Exo profile will carry to your other PCs (Material, Reduce motion, Source, Play next episode, each show's languages, and your add-ons' addresses). Both are sealed with Windows' own protection for your Windows user, and nothing in either leaves this PC;
 - `jellyfin.json`, if you connect to a Jellyfin server: its address and name, your user name and ID, an ID for this PC, and the key the server hands back, sealed with Windows' own protection for your Windows user. Your password is never kept. None of it goes through your Exo profile.
-- `app.log`, `crash.log` and `window-placement.json`: what Exo Cinema did (timings, buffering, errors), what went wrong if it crashed, and where its window was. `app.log` never holds a web address, a key, your Jellyfin server's address or an add-on's address: each address is cut to its kind of file (`https://…/*.mkv`), so the log is safe to attach to an issue.
+- `app.log`, `app.prev.log`, `crash.log` and `window-placement.json`: what Exo Cinema did (timings, buffering, errors, failed add-on and server answers), what went wrong if it crashed, and where its window was. Each run starts a new `app.log`; the run before is kept as `app.prev.log`, and each file stops at 512 KB. `app.log` never holds a web address, a key, your Jellyfin server's address, an add-on's address, a title or a file name: each address is cut to its kind of file (`https://…/*.mkv`), and a file name is replaced by `<file>`.
+- `reports` and `reports-state.json`: diagnostic reports waiting to be sent, and how many were sent today. A report is deleted once it is sent, or once it is dropped.
 - While the player is open, the title, the show and the poster of what's playing go to Windows' media controls on this PC, which show them in Windows' media flyouts and to apps that read them, such as Exo Launcher. They don't leave the PC; closing the player clears them.
 - WebView2's form memory is off: nothing you type into Exo Cinema (an add-on link, your Jellyfin password) is kept by it.
 
@@ -43,6 +44,18 @@ Connected, Exo Cinema asks that server, and no other, for your libraries, Contin
 
 Continue Watching, the Watchlist and History are Exo Cinema's own (Exo Watch, `watch\ledger.dat`): what you play here keeps where you left off, every 30 seconds and when you stop, and marks it watched once you're past nine tenths. None of it goes to a service.
 
+
+### Crash, freeze and error reports (on by default)
+Exo Cinema sends a diagnostic report to Exo's report service (`reports.getexo.app`, on Exo's Cloudflare account) when:
+- it crashes; the report is sent at its next start;
+- its window doesn't answer for five seconds (a freeze); it is sent straight away;
+- a film ends with a playback error from the player; sent straight away;
+- the Jellyfin server doesn't answer three times in a row; sent straight away;
+- one of your add-ons fails to load (not Cinemeta, Stremio's public catalog); sent straight away.
+
+A report holds these five things and nothing else: the app's name (`cinema`), Exo Cinema's version, the Windows build (for example `10.0.26300.0`), the name of the error (for example `InvalidOperationException`, `Hang`, `PlaybackFailed`, `ServerUnreachable` or `AddonFailed`), and up to about 8 KB of log lines from around the error. Before anything leaves this PC, the lines lose every address (your Jellyfin server's, an add-on's and its keys, any web address), file paths, file names, titles, your Windows user name and your PC's name, email addresses, numbers of nine or more digits, and anything that looks like a token. A line that still looks personal is removed whole. The service checks each report again and refuses one that still holds any of these.
+
+Not sent, and not kept: an install ID, an Exo account (there is none here), a watch history, what you searched for. The report service sees the IP address a report comes from while it answers, as any server does; it does not store it. Each error name is sent at most once a day, and this PC sends at most five reports a day. A report is stored for 30 days, then deleted. Exo uses reports only to find and fix what breaks in Exo Cinema.
 
 ### Microsoft
 
